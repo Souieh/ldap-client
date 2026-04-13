@@ -26,7 +26,6 @@ export async function bindWithPassword(
       scope: 'sub', // Changed from 'base' to 'sub'
       attributes: ['dn', 'cn', 'memberOf'], // Grab the DN and their groups while you're at it
     });
-    console.debug('Successfully bound to LDAP server', config, 'as user', searchEntries, username);
 
     return { success: true, dn: searchEntries[0]?.dn, upn };
   } catch (error: any) {
