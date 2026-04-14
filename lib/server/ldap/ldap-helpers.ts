@@ -12,8 +12,8 @@ export function getClient(config: LDAPConfig): Client {
     ...(config.protocol === 'ldaps' && config.ca
       ? {
           tlsOptions: {
-            ca: [config.ca],
-            rejectUnauthorized: true,
+            ca: config.ca ? [config.ca] : undefined,
+            rejectUnauthorized: !config.disableTlsVerification,
           },
         }
       : {}),

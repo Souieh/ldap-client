@@ -8,6 +8,7 @@ export interface LDAPConfig {
   baseDN: string;
   created: string;
   modified: string;
+  disableTlsVerification: boolean;
   ca?: string; // PEM-encoded CA certificate for LDAPS
 }
 

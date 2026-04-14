@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Plus, Trash2, Check, Network, Settings } from 'lucide-react';
-import { Modal } from '@/components/ui/modal';
 import { DynamicForm, FormField } from '@/components/forms/dynamic-form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
+import { Modal } from '@/components/ui/modal';
 import { UI_LABELS } from '@/lib/constants/ui-labels';
 import { ConfigProfile, LDAPConfig } from '@/lib/types/config';
+import { Check, Plus, Settings, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -19,7 +19,6 @@ export default function SettingsPage() {
   const [editingProfile, setEditingProfile] = useState<ConfigProfile | null>(null);
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [testingConnection, setTestingConnection] = useState(false);
-  
 
   useEffect(() => {
     loadProfiles();
@@ -47,10 +46,11 @@ export default function SettingsPage() {
       name: '',
       hostname: '',
       port: 389,
-      protocol: 'ldap', 
+      protocol: 'ldap',
       domain: '',
       baseDN: '',
       caCert: '',
+      disableTlsVerification: false,
     });
     setShowModal(true);
   };
@@ -61,11 +61,12 @@ export default function SettingsPage() {
       name: profile.name,
       hostname: profile.config.hostname,
       port: profile.config.port,
-      protocol: profile.config.protocol, 
+      protocol: profile.config.protocol,
       domain: profile.config.domain,
       baseDN: profile.config.baseDN || '',
       caCert: profile.config.ca || '',
-    }); 
+      disableTlsVerification: profile.config.disableTlsVerification || false,
+    });
     setShowModal(true);
   };
 
@@ -73,7 +74,7 @@ export default function SettingsPage() {
     try {
       setTestingConnection(true);
       // Prompt for password since it's not stored
-      const username =  prompt('Enter LDAP username:');
+      const username = prompt('Enter LDAP username:');
       const password = prompt('Enter LDAP password:');
       if (!username) return;
       if (!password) return;
@@ -83,13 +84,14 @@ export default function SettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           hostname: formValues.hostname,
-          username:username,
+          username: username,
           port: formValues.port,
-          protocol: formValues.protocol, 
+          protocol: formValues.protocol,
           caCert: formValues.caCert,
           password,
           domain: formValues.domain,
           baseDN: formValues.baseDN,
+          disableTlsVerification: formValues.disableTlsVerification,
         }),
       });
 
@@ -118,10 +120,11 @@ export default function SettingsPage() {
         name: formValues.name,
         hostname: formValues.hostname,
         port: parseInt(formValues.port),
-        protocol: formValues.protocol, 
+        protocol: formValues.protocol,
         domain: formValues.domain,
         baseDN: formValues.baseDN,
         ca: formValues.caCert || undefined,
+        disableTlsVerification: !!formValues.disableTlsVerification,
       };
 
       let res;
@@ -247,7 +250,7 @@ export default function SettingsPage() {
         { value: 'ldap', label: 'LDAP (389)' },
         { value: 'ldaps', label: 'LDAPS (636)' },
       ],
-    }, 
+    },
     {
       name: 'domain',
       label: UI_LABELS.config.domain,
@@ -263,6 +266,17 @@ export default function SettingsPage() {
       placeholder: 'dc=example,dc=com',
     },
     {
+      name: 'disableTlsVerification',
+      label: 'Disable TLS Verification',
+      type: 'select',
+      options: [
+        { value: 'false', label: 'Enabled (Secure)' },
+        { value: 'true', label: 'Disabled (Insecure)' },
+      ],
+      defaultValue: 'true',
+      help: 'Ignore certificate validation errors. Useful for self-signed certificates or internal testing.',
+    },
+    {
       name: 'caCert',
       label: 'CA Certificate (PEM)',
       type: 'textarea',
@@ -273,107 +287,111 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30">
-        <p className="text-muted-foreground animate-pulse">Loading...</p>
+      <div className='min-h-screen flex items-center justify-center bg-muted/30'>
+        <p className='text-muted-foreground animate-pulse'>Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-4xl shadow-xl border-t-4 border-t-primary">
-        <CardHeader className="text-center space-y-1">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-primary/10 rounded-full">
-              <Settings className="h-10 w-10 text-primary" />
+    <div className='min-h-screen flex items-center justify-center bg-muted/30 p-4'>
+      <Card className='w-full max-w-4xl shadow-xl border-t-4 border-t-primary'>
+        <CardHeader className='text-center space-y-1'>
+          <div className='flex justify-center mb-4'>
+            <div className='p-3 bg-primary/10 rounded-full'>
+              <Settings className='h-10 w-10 text-primary' />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">{UI_LABELS.config.title}</CardTitle>
+          <CardTitle className='text-2xl font-bold'>{UI_LABELS.config.title}</CardTitle>
           <CardDescription>Manage your LDAP connection profiles</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
+        <CardContent className='space-y-6'>
+          <div className='flex items-center justify-between'>
             <div>
-              <h2 className="text-xl font-semibold">Connection Profiles</h2>
-              <p className="text-muted-foreground text-sm mt-1">
+              <h2 className='text-xl font-semibold'>Connection Profiles</h2>
+              <p className='text-muted-foreground text-sm mt-1'>
                 Configure and manage your LDAP server connections
               </p>
             </div>
-            <Button onClick={handleNewProfile} className="gap-2">
-              <Plus className="h-4 w-4" />
+            <Button onClick={handleNewProfile} className='gap-2'>
+              <Plus className='h-4 w-4' />
               {UI_LABELS.config.newProfile}
             </Button>
           </div>
 
           {profiles.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="pt-6">
-                <p className="text-center text-muted-foreground py-8">
+            <Card className='border-dashed'>
+              <CardContent className='pt-6'>
+                <p className='text-center text-muted-foreground py-8'>
                   No profiles created yet. Create one to get started.
                 </p>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
               {profiles.map((profile) => (
-                <Card key={profile.id} className="relative">
+                <Card key={profile.id} className='relative'>
                   {profile.isActive && (
-                    <div className="absolute top-4 right-4">
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-medium">
-                        <Check className="h-3 w-3" />
+                    <div className='absolute top-4 right-4'>
+                      <span className='inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-medium'>
+                        <Check className='h-3 w-3' />
                         Active
                       </span>
                     </div>
                   )}
                   <CardHeader>
-                    <CardTitle className="text-lg">{profile.name}</CardTitle>
+                    <CardTitle className='text-lg'>{profile.name}</CardTitle>
                     <CardDescription>
                       {profile.config.hostname}:{profile.config.port}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3 mb-4">
+                    <div className='space-y-3 mb-4'>
                       <div>
-                        <p className="text-sm text-muted-foreground">Protocol</p>
-                        <p className="font-medium">{profile.config.protocol}</p>
+                        <p className='text-sm text-muted-foreground'>Protocol</p>
+                        <p className='font-medium'>{profile.config.protocol}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Domain</p>
-                        <p className="font-medium">{profile.config.domain}</p>
+                        <p className='text-sm text-muted-foreground'>Domain</p>
+                        <p className='font-medium'>{profile.config.domain}</p>
                       </div>
+                      {profile.config.disableTlsVerification && (
+                        <div>
+                          <p className='text-sm text-amber-600 font-medium italic'>
+                            TLS Verification Disabled
+                          </p>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <Button
-                        onClick={() => handleSelectProfile(profile.id)}
-                        className="w-full"
-                      >
+                    <div className='flex flex-col gap-2'>
+                      <Button onClick={() => handleSelectProfile(profile.id)} className='w-full'>
                         Select Profile
                       </Button>
                       {!profile.isActive && (
                         <Button
-                          variant="outline"
-                          size="sm"
+                          variant='outline'
+                          size='sm'
                           onClick={() => handleSetActive(profile.id)}
-                          className="w-full"
+                          className='w-full'
                         >
                           Set as Active
                         </Button>
                       )}
                       <Button
-                        variant="outline"
-                        size="sm"
+                        variant='outline'
+                        size='sm'
                         onClick={() => handleEditProfile(profile)}
-                        className="w-full"
+                        className='w-full'
                       >
                         Edit
                       </Button>
                       <Button
-                        variant="destructive"
-                        size="sm"
+                        variant='destructive'
+                        size='sm'
                         onClick={() => handleDeleteProfile(profile.id)}
-                        className="w-full"
+                        className='w-full'
                       >
-                        <Trash2 className="h-4 w-4 mr-2" />
+                        <Trash2 className='h-4 w-4 mr-2' />
                         Delete
                       </Button>
                     </div>
@@ -389,7 +407,7 @@ export default function SettingsPage() {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         title={editingProfile ? 'Edit Profile' : 'New LDAP Profile'}
-        size="lg"
+        size='lg'
         actions={[
           {
             label: UI_LABELS.config.testConnection,
@@ -407,15 +425,18 @@ export default function SettingsPage() {
         <DynamicForm
           fields={formFields}
           values={formValues}
-        onChange={(field, value) => {
-          setFormValues((prev) => {
-            const updated = { ...prev, [field]: value };
-            if (field === 'domain' && value) {
-              updated.baseDN = value.split('.').map((p: string) => `dc=${p.trim()}`).join(',');
-            }
-            return updated;
-          });
-        }}
+          onChange={(field, value) => {
+            setFormValues((prev) => {
+              const updated = { ...prev, [field]: value };
+              if (field === 'domain' && value) {
+                updated.baseDN = value
+                  .split('.')
+                  .map((p: string) => `dc=${p.trim()}`)
+                  .join(',');
+              }
+              return updated;
+            });
+          }}
         />
       </Modal>
     </div>
