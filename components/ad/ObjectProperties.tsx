@@ -157,7 +157,7 @@ export function ObjectPropertiesModal({
       onClose={onClose}
       title={`Properties: ${objectName}`}
       description={`Viewing and managing properties for "${objectName}"`}
-      size='lg'
+      size='4xl'
     >
       <ObjectProperties objectDN={objectDN} objectName={objectName} objectType={objectType} />
     </Modal>

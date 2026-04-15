@@ -1,7 +1,6 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -24,7 +23,7 @@ export interface ModalProps {
     variant?: 'default' | 'destructive' | 'outline';
     disabled?: boolean;
   }[];
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | 'full';
   closeOnEscape?: boolean;
 }
 
@@ -32,7 +31,12 @@ const sizeClasses = {
   sm: 'sm:max-w-sm',
   md: 'sm:max-w-md',
   lg: 'sm:max-w-lg',
-  xl: 'sm:max-w-2xl',
+  xl: 'sm:max-w-xl',
+  '2xl': 'sm:max-w-2xl',
+  '3xl': 'sm:max-w-3xl',
+  '4xl': 'sm:max-w-4xl',
+  '5xl': 'sm:max-w-5xl',
+  full: 'sm:max-w-[95vw]',
 };
 
 export function Modal({
