@@ -75,18 +75,19 @@ const tabs: TabConfig[] = [
   },
 ];
 
-export function ObjectProperties({ objectDN, objectName, objectType, onSuccess }: GroupObjectsProps & { onSuccess?: () => void }) {
+export function ObjectProperties({ objectDN, objectName, objectType, onSuccess }: GroupObjectsProps & { onSuccess?: (newDN?: string) => void }) {
   const [item, setItem] = useState<any>(null);
+  const [currentDN, setCurrentDN] = useState(objectDN);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isMoveOpen, setIsMoveOpen] = useState(false);
   const [allOUs, setAllOUs] = useState<any[]>([]);
 
-  const loadDetails = async () => {
+  const loadDetails = async (dnToLoad = currentDN) => {
     try {
       setIsLoading(true);
       const [detailsRes, ousRes] = await Promise.all([
-        fetch(`/api/ldap/objects/details?dn=${encodeURIComponent(objectDN)}`),
+        fetch(`/api/ldap/objects/details?dn=${encodeURIComponent(dnToLoad)}`),
         fetch('/api/ldap/ous')
       ]);
 
@@ -163,7 +164,7 @@ export function ObjectProperties({ objectDN, objectName, objectType, onSuccess }
             {availableTabs.map((tab) => (
               <TabsContent key={tab.key} value={tab.key} className='m-0 focus-visible:ring-0 p-2'>
                 <tab.content
-                  objectDN={objectDN}
+                  objectDN={currentDN}
                   objectName={objectName}
                   item={item}
                   onSuccess={loadDetails}
@@ -178,11 +179,12 @@ export function ObjectProperties({ objectDN, objectName, objectType, onSuccess }
       <DeleteObjectModal
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
-        dn={objectDN}
+        dn={currentDN}
         name={objectName}
         type={objectType}
         onSuccess={() => {
           setIsDeleteOpen(false);
+          // When deleted, we want to close the properties modal too
           if (onSuccess) onSuccess();
         }}
       />
@@ -190,12 +192,18 @@ export function ObjectProperties({ objectDN, objectName, objectType, onSuccess }
       <MoveObjectModal
         isOpen={isMoveOpen}
         onClose={() => setIsMoveOpen(false)}
-        dn={objectDN}
+        dn={currentDN}
         name={objectName}
         ous={allOUs}
-        onSuccess={() => {
+        onSuccess={(newDN) => {
           setIsMoveOpen(false);
-          loadDetails();
+          if (newDN) {
+            setCurrentDN(newDN);
+            loadDetails(newDN);
+            if (onSuccess) onSuccess(newDN);
+          } else {
+            loadDetails();
+          }
         }}
       />
     </div>
@@ -209,7 +217,7 @@ export function ObjectPropertiesModal({
   objectName,
   objectType,
   onSuccess,
-}: GroupObjectsModalProps & { onSuccess?: () => void }) {
+}: GroupObjectsModalProps & { onSuccess?: (newDN?: string) => void }) {
   return (
     <Modal
       isOpen={isOpen}
@@ -222,9 +230,12 @@ export function ObjectPropertiesModal({
         objectDN={objectDN}
         objectName={objectName}
         objectType={objectType}
-        onSuccess={() => {
-          if (onSuccess) onSuccess();
-          onClose();
+        onSuccess={(newDN) => {
+          if (onSuccess) onSuccess(newDN);
+          // If it was a delete (no newDN), close the modal
+          if (!newDN) {
+            onClose();
+          }
         }}
       />
     </Modal>

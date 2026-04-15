@@ -56,6 +56,9 @@ export async function PATCH(request: NextRequest) {
 
     if (action === 'move') {
       await ldapService.moveObject(dn, payload.newOU, session.userDN, password);
+      const rdn = dn.match(/(?:\\.|[^,])+/)?.[0] || dn.split(',')[0];
+      const newDN = `${rdn},${payload.newOU}`;
+      return NextResponse.json({ success: true, newDN });
     } else if (action === 'update') {
       await ldapService.updateObject(dn, payload.attributes, session.userDN, password);
     } else if (action === 'toggle-member') {
