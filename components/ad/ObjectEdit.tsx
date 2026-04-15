@@ -84,9 +84,10 @@ export function ObjectEdit({ item, onSuccess, group }: ObjectEditProps) {
         values={values}
         onChange={handleChange}
         onSubmit={handleSubmit}
-        submitLabel='Update'
+        submitLabel='Update All Properties'
         isSubmitting={isSubmitting}
         layout='grid'
+        useTabs={false}
       />
     </div>
   );

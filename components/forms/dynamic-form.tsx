@@ -36,6 +36,7 @@ export interface DynamicFormProps {
   submitLabel?: string;
   isSubmitting?: boolean;
   layout?: 'vertical' | 'grid';
+  useTabs?: boolean;
 }
 
 export function DynamicForm({
@@ -46,6 +47,7 @@ export function DynamicForm({
   submitLabel = 'Submit',
   isSubmitting = false,
   layout = 'vertical',
+  useTabs = true,
 }: DynamicFormProps) {
   const handleChange = (fieldName: string, value: any) => onChange(fieldName, value);
 
@@ -119,7 +121,6 @@ export function DynamicForm({
     onSubmit?.(values);
   };
 
-  // Group fields preserving insertion order
   const grouped: { label: string; fields: FormField[] }[] = [];
   const seen = new Map<string, number>();
 
@@ -132,7 +133,6 @@ export function DynamicForm({
     grouped[seen.get(key)!].fields.push(field);
   }
 
-  // Tabs with a red dot if a required field in that section is empty
   const invalidTabs = new Set(
     grouped
       .filter((section) =>
@@ -161,7 +161,6 @@ export function DynamicForm({
     </div>
   );
 
-  // No groups — render flat, no tabs
   if (grouped.length <= 1) {
     return (
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -172,6 +171,32 @@ export function DynamicForm({
               type="submit"
               disabled={isSubmitting}
               className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isSubmitting ? 'Saving...' : submitLabel}
+            </button>
+          </div>
+        )}
+      </form>
+    );
+  }
+
+  if (!useTabs) {
+    return (
+      <form onSubmit={handleSubmit} className="space-y-8 max-h-[600px] overflow-y-auto px-1 custom-scrollbar">
+        {grouped.map((section) => (
+          <div key={section.label} className="space-y-4">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider border-b pb-2">
+              {section.label}
+            </h3>
+            {renderSection(section.fields)}
+          </div>
+        ))}
+        {onSubmit && (
+          <div className="pt-4 sticky bottom-0 bg-background/80 backdrop-blur-sm border-t border-border py-4">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg"
             >
               {isSubmitting ? 'Saving...' : submitLabel}
             </button>
