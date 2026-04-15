@@ -6,6 +6,7 @@ import {
   deleteObject,
   moveObject,
   toggleGroupMember,
+  toggleObjectStatus,
   updateObject,
   updatePassword,
 } from './ldap-objects';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Users, Monitor, Users2, Plus, ChevronRight, Home } from 'lucide-react';
+import { Users, Monitor, Users2, Plus, ChevronRight, Home, UserCheck, UserX } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { OUTreeSidebar } from '@/components/layout/ou-tree-sidebar';
 import { FilterForm } from '@/components/forms/filter-form';
