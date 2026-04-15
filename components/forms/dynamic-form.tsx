@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export interface FormField {
@@ -142,21 +142,21 @@ export function DynamicForm({
   );
 
   const renderSection = (sectionFields: FormField[]) => (
-    <div className={layout === 'grid' ? 'grid grid-cols-2 gap-x-4 gap-y-3' : 'flex flex-col gap-3'}>
+    <div className={layout === 'grid' ? 'grid grid-cols-2 gap-x-4 gap-y-1' : 'flex flex-col gap-1'}>
       {sectionFields.map((field) => (
-        <FieldGroup
+        <Field
           key={field.name}
-          className={`mt-4 ${field.fullWidth || layout === 'vertical' ? 'col-span-2' : ''}`}
+          className={`mt-2 ${field.fullWidth || layout === 'vertical' ? 'col-span-2' : ''}`}
         >
-          <FieldLabel>
+          <FieldLabel className="text-xs text-muted-foreground mb-0">
             {field.label}
             {field.required && <span className="text-destructive ml-1">*</span>}
           </FieldLabel>
           {renderField(field)}
           {field.help && (
-            <p className="text-xs text-muted-foreground mt-1">{field.help}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{field.help}</p>
           )}
-        </FieldGroup>
+        </Field>
       ))}
     </div>
   );
@@ -184,15 +184,15 @@ export function DynamicForm({
     return (
       <form onSubmit={handleSubmit} className="space-y-8 max-h-[600px] overflow-y-auto px-1 custom-scrollbar">
         {grouped.map((section) => (
-          <div key={section.label} className="space-y-4">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider border-b pb-2">
+          <div key={section.label} className="space-y-2">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider border-b pb-1 opacity-70">
               {section.label}
             </h3>
             {renderSection(section.fields)}
           </div>
         ))}
         {onSubmit && (
-          <div className="pt-4 sticky bottom-0 bg-background/80 backdrop-blur-sm border-t border-border py-4">
+          <div className="pt-4 sticky bottom-0 bg-background/80 backdrop-blur-sm border-t border-border py-4 z-10">
             <button
               type="submit"
               disabled={isSubmitting}

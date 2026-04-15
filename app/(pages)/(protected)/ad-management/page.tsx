@@ -38,11 +38,6 @@ export default function ADManagementPage() {
   const [createOuParentDN, setCreateOuParentDN] = useState('');
   const [ouToDelete, setOuToDelete] = useState<{ dn: string; name: string } | null>(null);
 
-  const [objectToDelete, setObjectToDelete] = useState<{
-    dn: string;
-    name: string;
-    type: string;
-  } | null>(null);
 
   const [propertiesItem, setPropertiesItem] = useState<any | null>(null);
 
@@ -426,6 +421,7 @@ export default function ADManagementPage() {
           propertiesItem?.objectClass?.includes('computer') ? 'computer' :
           propertiesItem?.objectClass?.includes('group') ? 'group' : 'unknown'
         }
+        onSuccess={refreshCurrentData}
       />
 
       <CreateOUModal
@@ -447,14 +443,6 @@ export default function ADManagementPage() {
         }}
       />
 
-      <DeleteObjectModal
-        isOpen={!!objectToDelete}
-        onClose={() => setObjectToDelete(null)}
-        dn={objectToDelete?.dn || ''}
-        name={objectToDelete?.name || ''}
-        type={objectToDelete?.type || ''}
-        onSuccess={refreshCurrentData}
-      />
     </>
   );
 }

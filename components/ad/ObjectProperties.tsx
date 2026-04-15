@@ -10,6 +10,8 @@ import { ObjectPermissions } from './object-permissions';
 import { ObjectInfo } from './ObjectInfo';
 import { ObjectEdit } from './ObjectEdit';
 import { ObjectAccount } from './ObjectAccount';
+import { DeleteObjectModal } from './delete-object-modal';
+import { MoveObjectModal } from './move-object-modal';
 import { toast } from 'sonner';
 
 interface GroupObjectsProps {
@@ -73,17 +75,29 @@ const tabs: TabConfig[] = [
   },
 ];
 
-export function ObjectProperties({ objectDN, objectName, objectType }: GroupObjectsProps) {
+export function ObjectProperties({ objectDN, objectName, objectType, onSuccess }: GroupObjectsProps & { onSuccess?: () => void }) {
   const [item, setItem] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isMoveOpen, setIsMoveOpen] = useState(false);
+  const [allOUs, setAllOUs] = useState<any[]>([]);
 
   const loadDetails = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch(`/api/ldap/objects/details?dn=${encodeURIComponent(objectDN)}`);
-      if (!res.ok) throw new Error('Failed to load object details');
-      const data = await res.json();
+      const [detailsRes, ousRes] = await Promise.all([
+        fetch(`/api/ldap/objects/details?dn=${encodeURIComponent(objectDN)}`),
+        fetch('/api/ldap/ous')
+      ]);
+
+      if (!detailsRes.ok) throw new Error('Failed to load object details');
+      const data = await detailsRes.json();
       setItem(data);
+
+      if (ousRes.ok) {
+        const ous = await ousRes.json();
+        setAllOUs(ous);
+      }
     } catch (error) {
       console.error(error);
       toast.error('Error loading details');
@@ -112,6 +126,26 @@ export function ObjectProperties({ objectDN, objectName, objectType }: GroupObje
 
   return (
     <div className='space-y-4 p-2'>
+      <div className='flex items-center justify-between px-2'>
+        <div className='flex gap-2'>
+          <Button
+            variant='outline'
+            size='sm'
+            className='text-destructive hover:bg-destructive/10'
+            onClick={() => setIsDeleteOpen(true)}
+          >
+            Delete Object
+          </Button>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={() => setIsMoveOpen(true)}
+          >
+            Move Object
+          </Button>
+        </div>
+      </div>
+
       <div className='flex-1 min-w-0 bg-card border rounded-xl shadow-sm flex flex-col overflow-hidden'>
         <Tabs defaultValue={availableTabs[0].key}>
           <div className='px-4 pt-4 bg-muted/20 inline-flex overflow-x-auto no-scrollbar'>
@@ -140,6 +174,30 @@ export function ObjectProperties({ objectDN, objectName, objectType }: GroupObje
           </div>
         </Tabs>
       </div>
+
+      <DeleteObjectModal
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        dn={objectDN}
+        name={objectName}
+        type={objectType}
+        onSuccess={() => {
+          setIsDeleteOpen(false);
+          if (onSuccess) onSuccess();
+        }}
+      />
+
+      <MoveObjectModal
+        isOpen={isMoveOpen}
+        onClose={() => setIsMoveOpen(false)}
+        dn={objectDN}
+        name={objectName}
+        ous={allOUs}
+        onSuccess={() => {
+          setIsMoveOpen(false);
+          loadDetails();
+        }}
+      />
     </div>
   );
 }
@@ -150,7 +208,8 @@ export function ObjectPropertiesModal({
   objectDN,
   objectName,
   objectType,
-}: GroupObjectsModalProps) {
+  onSuccess,
+}: GroupObjectsModalProps & { onSuccess?: () => void }) {
   return (
     <Modal
       isOpen={isOpen}
@@ -159,7 +218,15 @@ export function ObjectPropertiesModal({
       description={`Viewing and managing properties for "${objectName}"`}
       size='4xl'
     >
-      <ObjectProperties objectDN={objectDN} objectName={objectName} objectType={objectType} />
+      <ObjectProperties
+        objectDN={objectDN}
+        objectName={objectName}
+        objectType={objectType}
+        onSuccess={() => {
+          if (onSuccess) onSuccess();
+          onClose();
+        }}
+      />
     </Modal>
   );
 }

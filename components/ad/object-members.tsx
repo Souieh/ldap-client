@@ -308,7 +308,7 @@ export function ObjectMembers({ objectDN, objectName, onSuccess }: GroupMembersP
                       </div>
                     </div>
                     <Button
-                      size='xs'
+                      size='sm'
                       variant='outline'
                       className='h-7 px-2 gap-1'
                       onClick={() => handleToggleMember(obj.dn, 'add', obj.type)}

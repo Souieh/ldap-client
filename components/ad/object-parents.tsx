@@ -277,7 +277,7 @@ export function ObjectParents({ objectDN, objectName, onSuccess }: ObjectParents
                       <p className='text-[10px] text-muted-foreground truncate font-mono'>{group.sAMAccountName}</p>
                     </div>
                     <Button
-                      size='xs'
+                      size='sm'
                       variant='outline'
                       className='h-7 px-2 gap-1'
                       onClick={() => handleToggleMember(group.dn, 'add')}
