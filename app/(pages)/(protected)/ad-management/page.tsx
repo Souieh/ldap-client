@@ -7,6 +7,7 @@ import { DeleteOUModal } from '@/components/ad/delete-ou-modal';
 import { ManageGroupsModal } from '@/components/ad/manage-groups-modal';
 import { MoveObjectModal } from '@/components/ad/move-object-modal';
 import { ObjectMembersModal } from '@/components/ad/object-members';
+import { ObjectPropertiesModal } from '@/components/ad/object-properties';
 import { ToggleStatusModal } from '@/components/ad/toggle-status-modal';
 import { UpdatePasswordModal } from '@/components/ad/update-password-modal';
 import { DataTable, DataTableColumn } from '@/components/data/data-table';
@@ -562,7 +563,13 @@ export default function ADManagementPage() {
         onSubmit={handleFormSubmit}
         initialValues={isEditMode ? selectedItem : undefined}
       />
-
+      <ObjectPropertiesModal
+        isOpen={!!groupForMembers}
+        onClose={() => setGroupForMembers(null)}
+        objectDN={groupForMembers?.dn || ''}
+        objectName={groupForMembers?.name || ''}
+        objectType={'group'}
+      />
       <CreateOUModal
         isOpen={isCreateOuOpen}
         onClose={() => setIsCreateOuOpen(false)}
@@ -635,10 +642,10 @@ export default function ADManagementPage() {
       />
 
       <ObjectMembersModal
-        isOpen={!!groupForMembers}
+        isOpen={!!false}
         onClose={() => setGroupForMembers(null)}
-        groupDN={groupForMembers?.dn || ''}
-        groupName={groupForMembers?.name || ''}
+        objectDN={groupForMembers?.dn || ''}
+        objectName={groupForMembers?.name || ''}
       />
     </>
   );

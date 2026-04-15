@@ -1,12 +1,9 @@
 'use client';
 
-import { ObjectMembers } from '@/components/ad/object-members';
-import { ObjectParents } from '@/components/ad/object-parents';
-import { ObjectPermissions } from '@/components/ad/object-permissions';
+import { ObjectProperties } from '@/components/ad/object-properties';
 import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAccountStatus, isAccountEnabled } from '@/lib/constants/ldap-attributes';
 import {
   Briefcase,
@@ -182,33 +179,9 @@ function DetailsContent() {
           </div>
         </div>
 
-        {/* Right Column: Tabbed Detailed Lists - Independent scroll */}
-        <div className='flex-1 min-w-0 bg-card border rounded-xl shadow-sm flex flex-col overflow-hidden'>
-          <Tabs defaultValue={isGroup ? 'members' : 'member-of'}>
-            <div className='px-4 pt-4 bg-muted/20'>
-              <TabsList>
-                {isGroup && <TabsTrigger value='members'>Members</TabsTrigger>}
-                <TabsTrigger value='member-of'>Member Of</TabsTrigger>
-                <TabsTrigger value='permissions'>Permissions</TabsTrigger>
-              </TabsList>
-            </div>
-
-            <div className='flex-1 overflow-y-auto bg-muted/20'>
-              {isGroup && (
-                <TabsContent value='members' className='m-0 focus-visible:ring-0 p-2'>
-                  <ObjectMembers groupDN={dn} groupName={item.name} />
-                </TabsContent>
-              )}
-
-              <TabsContent value='member-of' className='m-0 focus-visible:ring-0 p-2'>
-                <ObjectParents objectDN={dn} objectName={item.name} />
-              </TabsContent>
-
-              <TabsContent value='permissions' className='m-0 focus-visible:ring-0'>
-                <ObjectPermissions dn={item.dn} hideCard={true} />
-              </TabsContent>
-            </div>
-          </Tabs>
+        <div className='w-full'>
+          <ObjectProperties objectDN={dn} objectName={item.name}  objectType={isUser ? 'user' : isComputer ? 'computer' : isGroup ? 'group' : 'unknown'
+          }/>
         </div>
       </div>
     </div>

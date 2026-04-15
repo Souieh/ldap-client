@@ -12,9 +12,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { groupDN } = body;
+    const { objectDN } = body;
 
-    if (!groupDN) {
+    if (!objectDN) {
       return NextResponse.json({ error: 'groupDN is required' }, { status: 400 });
     }
 
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       profile.config,
       session.userDN,
       session.password,
-      groupDN
+      objectDN
     );
 
     return NextResponse.json(members);
