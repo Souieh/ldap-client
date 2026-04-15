@@ -130,9 +130,9 @@ export class LDAPService {
     config: LDAPConfig,
     userDN: string,
     password: string,
-    groupDN: string
+    objectDN: string
   ): Promise<any[]> {
-    return getGroupMembers(config, userDN, password, groupDN);
+    return getGroupMembers(config, userDN, password, objectDN);
   }
 
   async getObjectParents(

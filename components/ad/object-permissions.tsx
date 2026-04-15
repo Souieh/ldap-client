@@ -15,27 +15,27 @@ interface ACE {
 }
 
 interface ObjectPermissionsProps {
-  dn: string;
+  objectDN: string;
   hideCard?: boolean;
 }
 
 const includes = (obj: { [key: string]: any }, key: string, value: string) =>
   obj[key]?.toLowerCase().includes(value.toLowerCase());
 
-export function ObjectPermissions({ dn, hideCard = false }: ObjectPermissionsProps) {
+export function ObjectPermissions({ objectDN, hideCard = false }: ObjectPermissionsProps) {
   const [permissions, setPermissions] = useState<ACE[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchKey, setSearchKey] = useState('');
   useEffect(() => {
-    if (dn) {
+    if (objectDN) {
       loadPermissions();
     }
-  }, [dn]);
+  }, [objectDN]);
 
   const loadPermissions = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch(`/api/ldap/objects/permissions?dn=${encodeURIComponent(dn)}`);
+      const res = await fetch(`/api/ldap/objects/permissions?dn=${encodeURIComponent(objectDN)}`);
       if (!res.ok) throw new Error('Failed to load permissions');
       const data = await res.json();
       setPermissions(data);
@@ -151,8 +151,7 @@ export function ObjectPermissions({ dn, hideCard = false }: ObjectPermissionsPro
       )}
     </div>
   );
-
-  if (hideCard) return content;
+  return content;
 
   return (
     <div className='bg-card border rounded-xl shadow-sm overflow-hidden'>

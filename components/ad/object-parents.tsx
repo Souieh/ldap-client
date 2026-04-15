@@ -160,38 +160,6 @@ export function ObjectParentsModal({
   objectDN,
   objectName,
 }: GroupParentsModalProps) {
-  const [parents, setParents] = useState<Parent[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (isOpen && objectDN) {
-      loadParents();
-    }
-  }, [isOpen, objectDN]);
-
-  const loadParents = async () => {
-    try {
-      setIsLoading(true);
-      const res = await fetch('/api/ldap/groups/parents', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ objectDN }),
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to load group parents');
-      }
-
-      const data = await res.json();
-      setParents(data);
-    } catch (error) {
-      console.error(error);
-      toast.error('Error loading group parents');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <Modal
       isOpen={isOpen}

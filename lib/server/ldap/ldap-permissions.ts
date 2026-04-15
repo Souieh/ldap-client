@@ -26,6 +26,7 @@ export interface ACEUI {
  * Value: 30 03 02 01 04
  */
 const SD_FLAGS_CONTROL = new Control('1.2.840.113556.1.4.801', {
+  //@ts-ignore
   value: Buffer.from('3003020104', 'hex'),
 });
 const WELL_KNOWN_SIDS: Record<string, string> = {
