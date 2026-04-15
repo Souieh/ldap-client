@@ -37,6 +37,36 @@ export async function searchUsers(
   }
 }
 
+export async function getObjectByDN(
+  config: LDAPConfig,
+  userDN: string,
+  password: string,
+  dn: string
+): Promise<any> {
+  const client = getClient(config);
+  try {
+    await client.bind(userDN, password);
+    const { searchEntries } = await client.search(dn, {
+      scope: 'base',
+    });
+
+    if (searchEntries.length === 0) {
+      throw new Error('Object not found');
+    }
+
+    const entry = searchEntries[0];
+    const objectClass = entry.objectClass as string[];
+
+    if (objectClass.includes('user')) return mapToADUser(entry);
+    if (objectClass.includes('group')) return mapToADGroup(entry);
+    if (objectClass.includes('computer')) return mapToADComputer(entry);
+
+    return entry;
+  } finally {
+    await client.unbind();
+  }
+}
+
 export async function getGroupMembers(
   config: LDAPConfig,
   userDN: string,

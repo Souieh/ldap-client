@@ -14,7 +14,6 @@ import { MoveObjectModal } from '@/components/ad/move-object-modal';
 import { DeleteObjectModal } from '@/components/ad/delete-object-modal';
 import { UpdatePasswordModal } from '@/components/ad/update-password-modal';
 import { ToggleStatusModal } from '@/components/ad/toggle-status-modal';
-import { ADObjectDetailModal } from '@/components/ad/ad-object-detail-modal';
 import { ADObjectFormModal } from '@/components/ad/ad-object-form-modal';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,6 +27,7 @@ import { isAccountEnabled } from '@/lib/constants/ldap-attributes';
 type ObjectType = 'user' | 'computer' | 'group';
 
 export default function ADManagementPage() { 
+  const router = useRouter();
   const [ous, setOus] = useState<ADOU[]>([]);
   const [selectedOuDN, setSelectedOuDN] = useState<string>('');
   const [objectType, setObjectType] = useState<ObjectType>('user');
@@ -39,7 +39,6 @@ export default function ADManagementPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [selectedItem, setSelectedItem] = useState<any>(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
   const [isCreateOuOpen, setIsCreateOuOpen] = useState(false);
   const [createOuParentDN, setCreateOuParentDN] = useState('');
   const [ouToDelete, setOuToDelete] = useState<{ dn: string; name: string } | null>(null);
@@ -221,8 +220,8 @@ export default function ADManagementPage() {
   };
 
   const handleView = (item: any) => {
-    setSelectedItem(item);
-    setShowDetailModal(true);
+    const encodedDN = encodeURIComponent(item.dn);
+    router.push(`/ad-management/details?dn=${encodedDN}`);
   };
 
   const openCreateForm = (type: 'user' | 'group', item?: any) => {
@@ -610,12 +609,6 @@ export default function ADManagementPage() {
         }
         memberOf={objectForGroups?.memberOf}
         onSuccess={refreshCurrentData}
-      />
-
-      <ADObjectDetailModal
-        isOpen={showDetailModal}
-        onClose={() => setShowDetailModal(false)}
-        item={selectedItem}
       />
 
       <ToggleStatusModal

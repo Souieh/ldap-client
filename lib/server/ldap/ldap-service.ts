@@ -10,7 +10,7 @@ import {
   updatePassword,
 } from './ldap-objects';
 import { createOU, deleteOU, searchOUs } from './ldap-ous';
-import { getGroupMembers, searchComputers, searchGroups, searchUsers } from './ldap-search';
+import { getGroupMembers, getObjectByDN, searchComputers, searchGroups, searchUsers } from './ldap-search';
 
 export class LDAPService {
   async createObject(
@@ -124,6 +124,15 @@ export class LDAPService {
     groupDN: string
   ): Promise<any[]> {
     return getGroupMembers(config, userDN, password, groupDN);
+  }
+
+  async getObjectByDN(
+    config: LDAPConfig,
+    userDN: string,
+    password: string,
+    dn: string
+  ): Promise<any> {
+    return getObjectByDN(config, userDN, password, dn);
   }
 
   async getDashboardStats(
