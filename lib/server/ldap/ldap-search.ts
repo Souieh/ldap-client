@@ -67,6 +67,70 @@ export async function getObjectByDN(
   }
 }
 
+export async function getObjectParents(
+  config: LDAPConfig,
+  userDN: string,
+  password: string,
+  dn: string
+): Promise<any[]> {
+  const client = getClient(config);
+  try {
+    await client.bind(userDN, password);
+
+    // 1. Get the object's parent groups (DNs) from memberOf attribute
+    const { searchEntries } = await client.search(dn, {
+      scope: 'base',
+      attributes: ['memberOf'],
+    });
+
+    if (searchEntries.length === 0) return [];
+
+    const memberOf = searchEntries[0].memberOf;
+    const parentDNs = Array.isArray(memberOf) ? memberOf : memberOf ? [memberOf] : [];
+
+    if (parentDNs.length === 0) return [];
+
+    // 2. Fetch details for each parent group efficiently using chunked searches
+    const chunkSize = 50;
+    const allResults = [];
+
+    for (let i = 0; i < parentDNs.length; i += chunkSize) {
+      const chunk = parentDNs.slice(i, i + chunkSize);
+      const filter = `(|${chunk.map((pdn) => `(distinguishedName=${pdn})`).join('')})`;
+
+      try {
+        const { searchEntries: resolvedEntries } = await client.search(config.baseDN, {
+          filter,
+          scope: 'sub',
+          attributes: ['dn', 'cn', 'sAMAccountName', 'objectClass', 'displayName', 'mail'],
+        });
+
+        const chunkResults = resolvedEntries.map((entry) => {
+          const objectClass = (entry.objectClass || []) as string[];
+          let type = 'Group'; // In AD, memberOf typically points to groups
+          if (objectClass.includes('user')) type = 'User';
+          else if (objectClass.includes('computer')) type = 'Computer';
+
+          return {
+            dn: entry.dn,
+            cn: entry.cn,
+            sAMAccountName: entry.sAMAccountName,
+            displayName: entry.displayName,
+            mail: entry.mail,
+            type,
+          };
+        });
+        allResults.push(...chunkResults);
+      } catch (e) {
+        console.error(`Error fetching parent group chunk:`, e);
+      }
+    }
+
+    return allResults;
+  } finally {
+    await client.unbind();
+  }
+}
 export async function getGroupMembers(
   config: LDAPConfig,
   userDN: string,
@@ -103,7 +167,7 @@ export async function getGroupMembers(
 
     for (let i = 0; i < memberDNs.length; i += chunkSize) {
       const chunk = memberDNs.slice(i, i + chunkSize);
-      const filter = `(|${chunk.map(dn => `(distinguishedName=${dn})`).join('')})`;
+      const filter = `(|${chunk.map((dn) => `(distinguishedName=${dn})`).join('')})`;
 
       try {
         const { searchEntries } = await client.search(config.baseDN, {
@@ -112,7 +176,7 @@ export async function getGroupMembers(
           attributes: ['dn', 'cn', 'sAMAccountName', 'objectClass', 'displayName', 'mail'],
         });
 
-        const chunkResults = searchEntries.map(entry => {
+        const chunkResults = searchEntries.map((entry) => {
           const objectClass = (entry.objectClass || []) as string[];
           let type = 'Unknown';
           if (objectClass.includes('user')) type = 'User';

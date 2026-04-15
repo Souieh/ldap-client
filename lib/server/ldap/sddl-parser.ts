@@ -18,16 +18,51 @@ export function sidToString(input: Buffer | Uint8Array): string {
   if (!input) return '';
   const buffer = Buffer.isBuffer(input) ? input : Buffer.from(input);
   if (buffer.length < 8) return '';
+
   const revision = buffer.readUInt8(0);
   const subAuthorityCount = buffer.readUInt8(1);
   const identifierAuthority = buffer.readUIntBE(2, 6);
 
-  let sid = `S-${revision}-${identifierAuthority}`;
+  // Per spec: if authority >= 2^32, format as hex; otherwise decimal
+  const authorityStr =
+    identifierAuthority >= 0x100000000
+      ? `0x${identifierAuthority.toString(16).toUpperCase()}`
+      : String(identifierAuthority);
+
+  let sid = `S-${revision}-${authorityStr}`;
   for (let i = 0; i < subAuthorityCount; i++) {
+    if (8 + i * 4 + 4 > buffer.length) break; // guard truncated buffer
     const subAuthority = buffer.readUInt32LE(8 + i * 4);
     sid += `-${subAuthority}`;
   }
   return sid;
+}
+
+/**
+ * Convert an S-1-5-... string back to a binary Buffer.
+ * Used for constructing LDAP objectSid search filters.
+ */
+export function sidToBuffer(sidString: string): Buffer {
+  const parts = sidString.split('-').slice(1); // drop leading 'S'
+  const revision = parseInt(parts[0], 10);
+  const authority = parseInt(parts[1], 10);
+  const subAuthorities = parts.slice(2).map((p) => parseInt(p, 10));
+
+  const buf = Buffer.alloc(8 + subAuthorities.length * 4);
+  buf.writeUInt8(revision, 0);
+  buf.writeUInt8(subAuthorities.length, 1);
+  buf.writeUIntBE(authority, 2, 6);
+  subAuthorities.forEach((sa, i) => buf.writeUInt32LE(sa, 8 + i * 4));
+  return buf;
+}
+
+/**
+ * Encode a SID string as an LDAP escaped-octet-string for use in filters.
+ * e.g. S-1-5-21-... → \01\05\00\00...
+ */
+export function sidToLdapFilter(sidString: string): string {
+  const buf = sidToBuffer(sidString);
+  return buf.reduce((s, b) => s + `\\${b.toString(16).padStart(2, '0')}`, '');
 }
 
 export function parseSecurityDescriptor(input: Buffer | Uint8Array): SecurityDescriptor {
@@ -35,73 +70,55 @@ export function parseSecurityDescriptor(input: Buffer | Uint8Array): SecurityDes
   const buffer = Buffer.isBuffer(input) ? input : Buffer.from(input);
 
   if (buffer.length < 20) {
-    throw new Error('Invalid Security Descriptor buffer');
+    throw new Error(`Security Descriptor too short: ${buffer.length} bytes`);
   }
 
-  // Revision (1 byte)
   const revision = buffer.readUInt8(0);
-  // Sbz1 (1 byte)
-  // Control (2 bytes)
+  // byte 1 = Sbz1, skip
   const control = buffer.readUInt16LE(2);
-  // Offset to Owner (4 bytes)
   const ownerOffset = buffer.readUInt32LE(4);
-  // Offset to Group (4 bytes)
   const groupOffset = buffer.readUInt32LE(8);
-  // Offset to Sacl (4 bytes)
-  // const saclOffset = buffer.readUInt32LE(12);
-  // Offset to Dacl (4 bytes)
+  // bytes 12-15 = SACL offset, skip
   const daclOffset = buffer.readUInt32LE(16);
 
-  let ownerSid: string | undefined;
-  if (ownerOffset > 0 && ownerOffset < buffer.length) {
-    ownerSid = parseSid(buffer.slice(ownerOffset));
-  }
+  const ownerSid =
+    ownerOffset >= 20 && ownerOffset < buffer.length
+      ? sidToString(buffer.subarray(ownerOffset))
+      : undefined;
 
-  let groupSid: string | undefined;
-  if (groupOffset > 0 && groupOffset < buffer.length) {
-    groupSid = parseSid(buffer.slice(groupOffset));
-  }
+  const groupSid =
+    groupOffset >= 20 && groupOffset < buffer.length
+      ? sidToString(buffer.subarray(groupOffset))
+      : undefined;
 
-  let dacl: ACE[] | undefined;
-  if (daclOffset > 0 && daclOffset < buffer.length) {
-    dacl = parseAcl(buffer.slice(daclOffset));
-  }
+  const dacl =
+    daclOffset >= 20 && daclOffset < buffer.length
+      ? parseAcl(buffer.subarray(daclOffset))
+      : undefined;
 
   return { revision, control, ownerSid, groupSid, dacl };
 }
 
-function parseSid(buffer: Buffer): string {
-  return sidToString(buffer);
-}
-
 function parseAcl(buffer: Buffer): ACE[] {
-  // ACL Revision (1 byte)
-  // const revision = buffer.readUInt8(0);
-  // Sbz1 (1 byte)
-  // ACL Size (2 bytes)
-  // const aclSize = buffer.readUInt16LE(2);
-  // AceCount (2 bytes)
-  const aceCount = buffer.readUInt16LE(4);
-  // Sbz2 (2 bytes)
+  if (buffer.length < 8) return [];
 
+  // byte 0 = ACL revision, byte 1 = Sbz1
+  // bytes 2-3 = ACL size, bytes 4-5 = ACE count, bytes 6-7 = Sbz2
+  const aceCount = buffer.readUInt16LE(4);
   const aces: ACE[] = [];
   let offset = 8;
-  for (let i = 0; i < aceCount; i++) {
-    if (offset + 4 > buffer.length) break;
 
-    // ACE Type (1 byte)
+  for (let i = 0; i < aceCount; i++) {
+    if (offset + 8 > buffer.length) break; // need at least header + mask
+
     const aceType = buffer.readUInt8(offset);
-    // ACE Flags (1 byte)
     const aceFlags = buffer.readUInt8(offset + 1);
-    // ACE Size (2 bytes)
     const aceSize = buffer.readUInt16LE(offset + 2);
 
-    if (offset + aceSize > buffer.length) break;
+    if (aceSize < 8 || offset + aceSize > buffer.length) break;
 
-    // Mask (4 bytes)
     const mask = buffer.readUInt32LE(offset + 4);
-    // SID (starts at offset + 8)
-    const sid = parseSid(buffer.slice(offset + 8));
+    const sid = sidToString(buffer.subarray(offset + 8));
 
     let type: ACE['type'] = 'OTHER';
     if (aceType === 0x00) type = 'ALLOW';
@@ -112,7 +129,7 @@ function parseAcl(buffer: Buffer): ACE[] {
       flags: aceFlags,
       mask,
       sid,
-      inherited: (aceFlags & 0x10) !== 0,
+      inherited: (aceFlags & 0x10) !== 0, // INHERITED_ACE
     });
 
     offset += aceSize;
@@ -122,24 +139,54 @@ function parseAcl(buffer: Buffer): ACE[] {
 
 export function getRightsFromMask(mask: number): string[] {
   const rights: string[] = [];
+
+  // Generic rights
   if (mask & 0x80000000) rights.push('Generic Read');
   if (mask & 0x40000000) rights.push('Generic Write');
   if (mask & 0x20000000) rights.push('Generic Execute');
   if (mask & 0x10000000) rights.push('Generic All');
-  if (mask & 0x000F0000) rights.push('Full Control');
-  if (mask & 0x00020000) rights.push('Write');
-  if (mask & 0x00010000) rights.push('Read');
-  if (mask & 0x00000001) rights.push('Create Child');
-  if (mask & 0x00000002) rights.push('Delete Child');
-  if (mask & 0x00000004) rights.push('List Children');
-  if (mask & 0x00000008) rights.push('Self Write');
-  if (mask & 0x00000010) rights.push('Read Property');
-  if (mask & 0x00000020) rights.push('Write Property');
-  if (mask & 0x00000040) rights.push('Delete Tree');
+
+  // Standard rights (correct bit positions per Windows SDK)
+  if (mask & 0x00080000) rights.push('Take Ownership'); // WRITE_OWNER
+  if (mask & 0x00040000) rights.push('Change Permissions'); // WRITE_DAC
+  if (mask & 0x00020000) rights.push('Read Permissions'); // READ_CONTROL
+  if (mask & 0x00010000) rights.push('Delete'); // DELETE
+
+  // DS-specific object access rights
+  if (mask & 0x00000100) rights.push('Extended Right');
   if (mask & 0x00000080) rights.push('List Object');
-  if (mask & 0x00010000) rights.push('Delete');
-  if (mask & 0x00020000) rights.push('Read Permissions');
-  if (mask & 0x00040000) rights.push('Change Permissions');
-  if (mask & 0x00080000) rights.push('Take Ownership');
-  return rights.length > 0 ? rights : [`Unknown (0x${mask.toString(16)})`];
+  if (mask & 0x00000040) rights.push('Delete Tree');
+  if (mask & 0x00000020) rights.push('Write Property');
+  if (mask & 0x00000010) rights.push('Read Property');
+  if (mask & 0x00000008) rights.push('Self Write');
+  if (mask & 0x00000004) rights.push('List Children');
+  if (mask & 0x00000002) rights.push('Delete Child');
+  if (mask & 0x00000001) rights.push('Create Child');
+
+  return rights.length > 0 ? rights : [`Unknown (0x${mask.toString(16).padStart(8, '0')})`];
+}
+
+/**
+ * Returns a human-readable "Applies To" string from ACE flags.
+ *
+ * Flags:
+ *   0x01  OBJECT_INHERIT_ACE      (OI) — propagates to child leaf objects
+ *   0x02  CONTAINER_INHERIT_ACE   (CI) — propagates to child containers
+ *   0x04  NO_PROPAGATE_INHERIT_ACE(NP) — do not propagate further
+ *   0x08  INHERIT_ONLY_ACE        (IO) — does NOT apply to this object
+ *   0x10  INHERITED_ACE               — this ACE was inherited
+ */
+export function getAppliesToFromFlags(flags: number): string {
+  const OI = !!(flags & 0x01);
+  const CI = !!(flags & 0x02);
+  const IO = !!(flags & 0x08); // inherit-only = does NOT apply to this object
+
+  if (!OI && !CI) return 'This object only';
+  if (OI && CI && !IO) return 'This object and all child objects';
+  if (CI && !OI && !IO) return 'This object and child containers';
+  if (OI && !CI && !IO) return 'This object and child leaf objects';
+  if (IO && OI && CI) return 'All child objects';
+  if (IO && CI) return 'Child containers only';
+  if (IO && OI) return 'Child leaf objects only';
+  return 'This object only';
 }

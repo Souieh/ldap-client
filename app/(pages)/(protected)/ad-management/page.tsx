@@ -1,33 +1,32 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { Users, Monitor, Users2, Plus, ChevronRight, Home, UserCheck, UserX } from 'lucide-react';
-import { Header } from '@/components/layout/header';
-import { OUTreeSidebar } from '@/components/layout/ou-tree-sidebar';
-import { FilterForm } from '@/components/forms/filter-form';
-import { DataTable, DataTableColumn } from '@/components/data/data-table';
+import { ADObjectFormModal } from '@/components/ad/ad-object-form-modal';
 import { CreateOUModal } from '@/components/ad/create-ou-modal';
+import { DeleteObjectModal } from '@/components/ad/delete-object-modal';
 import { DeleteOUModal } from '@/components/ad/delete-ou-modal';
 import { ManageGroupsModal } from '@/components/ad/manage-groups-modal';
-import { GroupMembersModal } from '@/components/ad/group-members-modal';
 import { MoveObjectModal } from '@/components/ad/move-object-modal';
-import { DeleteObjectModal } from '@/components/ad/delete-object-modal';
-import { UpdatePasswordModal } from '@/components/ad/update-password-modal';
+import { ObjectMembersModal } from '@/components/ad/object-members';
 import { ToggleStatusModal } from '@/components/ad/toggle-status-modal';
-import { ADObjectFormModal } from '@/components/ad/ad-object-form-modal';
+import { UpdatePasswordModal } from '@/components/ad/update-password-modal';
+import { DataTable, DataTableColumn } from '@/components/data/data-table';
+import { FilterForm } from '@/components/forms/filter-form';
+import { Header } from '@/components/layout/header';
+import { OUTreeSidebar } from '@/components/layout/ou-tree-sidebar';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { getAccountStatus, isAccountEnabled } from '@/lib/constants/ldap-attributes';
 import { UI_LABELS } from '@/lib/constants/ui-labels';
-import { LDAP_ATTRIBUTES, getAccountStatus } from '@/lib/constants/ldap-attributes';
-import { ADOU, ADUser, ADComputer, ADGroup } from '@/lib/types/config';
-import { isAccountEnabled } from '@/lib/constants/ldap-attributes';
+import { ADComputer, ADGroup, ADOU, ADUser } from '@/lib/types/config';
+import { cn } from '@/lib/utils';
+import { ChevronRight, Home, Monitor, Plus, UserCheck, UserX, Users, Users2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 type ObjectType = 'user' | 'computer' | 'group';
 
-export default function ADManagementPage() { 
+export default function ADManagementPage() {
   const router = useRouter();
   const [ous, setOus] = useState<ADOU[]>([]);
   const [selectedOuDN, setSelectedOuDN] = useState<string>('');
@@ -43,10 +42,21 @@ export default function ADManagementPage() {
   const [isCreateOuOpen, setIsCreateOuOpen] = useState(false);
   const [createOuParentDN, setCreateOuParentDN] = useState('');
   const [ouToDelete, setOuToDelete] = useState<{ dn: string; name: string } | null>(null);
-  const [objectToDelete, setObjectToDelete] = useState<{ dn: string; name: string; type: string } | null>(null);
+  const [objectToDelete, setObjectToDelete] = useState<{
+    dn: string;
+    name: string;
+    type: string;
+  } | null>(null);
   const [objectToMove, setObjectToMove] = useState<{ dn: string; name: string } | null>(null);
-  const [objectForPassword, setObjectForPassword] = useState<{ dn: string; name: string } | null>(null);
-  const [objectForStatus, setObjectForStatus] = useState<{ dn: string; name: string; enabled: boolean; type: string } | null>(null);
+  const [objectForPassword, setObjectForPassword] = useState<{ dn: string; name: string } | null>(
+    null
+  );
+  const [objectForStatus, setObjectForStatus] = useState<{
+    dn: string;
+    name: string;
+    enabled: boolean;
+    type: string;
+  } | null>(null);
   const [objectForGroups, setObjectForGroups] = useState<any | null>(null);
   const [groupForMembers, setGroupForMembers] = useState<{ dn: string; name: string } | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -56,7 +66,7 @@ export default function ADManagementPage() {
   useEffect(() => {
     loadOUs();
   }, []);
- 
+
   const breadcrumbs = useMemo(() => {
     if (!selectedOuDN) return [];
     if (selectedOuDN === 'ROOT') return [{ label: 'All Objects', dn: 'ROOT' }];
@@ -160,10 +170,15 @@ export default function ADManagementPage() {
 
   const refreshCurrentData = async () => {
     if (selectedOuDN === 'ROOT') {
-      await handleSelectOU('ROOT', { dn: 'ROOT', ou: 'All Objects', objectClass: [], cn: 'All Objects' });
+      await handleSelectOU('ROOT', {
+        dn: 'ROOT',
+        ou: 'All Objects',
+        objectClass: [],
+        cn: 'All Objects',
+      });
       return;
     }
-    const currentOu = ous.find(o => o.dn === selectedOuDN);
+    const currentOu = ous.find((o) => o.dn === selectedOuDN);
     if (currentOu && selectedOuDN) {
       await handleSelectOU(selectedOuDN, currentOu);
     }
@@ -301,7 +316,7 @@ export default function ADManagementPage() {
     const enabled = isAccountEnabled(item.userAccountControl);
     return {
       label: enabled ? 'Disable' : 'Enable',
-      icon: enabled ? <UserX className="h-4 w-4 mr-2" /> : <UserCheck className="h-4 w-4 mr-2" />,
+      icon: enabled ? <UserX className='h-4 w-4 mr-2' /> : <UserCheck className='h-4 w-4 mr-2' />,
       onClick: (item: any) => {
         setObjectForStatus({
           dn: item.dn,
@@ -309,7 +324,7 @@ export default function ADManagementPage() {
           enabled: enabled,
           type: item.objectClass.includes('computer') ? 'Computer' : 'User',
         });
-      }
+      },
     };
   };
 
@@ -360,22 +375,22 @@ export default function ADManagementPage() {
   return (
     <>
       <Header />
-      <main className="container mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-8">{UI_LABELS.ad.title}</h1>
+      <main className='container mx-auto py-8 px-4'>
+        <h1 className='text-3xl font-bold mb-8'>{UI_LABELS.ad.title}</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className='grid grid-cols-1 lg:grid-cols-4 gap-6'>
           {/* Sidebar with OU Tree */}
-          <div className="lg:col-span-1">
-            <div className="border border-border rounded-lg p-4 bg-card">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <h2 className="font-semibold">{UI_LABELS.ad.folders}</h2>
+          <div className='lg:col-span-1'>
+            <div className='border border-border rounded-lg p-4 bg-card'>
+              <div className='mb-4 flex items-center justify-between gap-3'>
+                <h2 className='font-semibold'>{UI_LABELS.ad.folders}</h2>
                 <button
-                  type="button"
+                  type='button'
                   onClick={() => openCreateOUForm()}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-muted text-foreground transition-colors hover:bg-muted/80"
-                  aria-label="Create Organizational Unit"
+                  className='inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-muted text-foreground transition-colors hover:bg-muted/80'
+                  aria-label='Create Organizational Unit'
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className='h-4 w-4' />
                 </button>
               </div>
               <OUTreeSidebar
@@ -390,19 +405,19 @@ export default function ADManagementPage() {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3">
+          <div className='lg:col-span-3'>
             {!selectedOuDN ? (
-              <div className="flex items-center justify-center h-96 rounded-lg border border-border bg-muted/50">
-                <p className="text-muted-foreground">{UI_LABELS.ad.noSelection}</p>
+              <div className='flex items-center justify-center h-96 rounded-lg border border-border bg-muted/50'>
+                <p className='text-muted-foreground'>{UI_LABELS.ad.noSelection}</p>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className='space-y-6'>
                 {/* Breadcrumb Path Navigation */}
-                <nav className="flex items-center flex-wrap gap-y-1 text-sm text-muted-foreground bg-muted/30 p-2 rounded-lg border border-border/40">
+                <nav className='flex items-center flex-wrap gap-y-1 text-sm text-muted-foreground bg-muted/30 p-2 rounded-lg border border-border/40'>
                   <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2 hover:bg-background"
+                    variant='ghost'
+                    size='sm'
+                    className='h-8 px-2 hover:bg-background'
                     onClick={() => {
                       setSelectedOuDN('');
                       setUsers([]);
@@ -410,23 +425,25 @@ export default function ADManagementPage() {
                       setGroups([]);
                     }}
                   >
-                    <Home className="h-4 w-4" />
+                    <Home className='h-4 w-4' />
                   </Button>
                   {breadcrumbs.map((crumb, index) => {
                     const isLast = index === breadcrumbs.length - 1;
-                    const linkedOu = ous.find(o => o.dn.toLowerCase() === crumb.dn.toLowerCase());
+                    const linkedOu = ous.find((o) => o.dn.toLowerCase() === crumb.dn.toLowerCase());
 
                     return (
-                      <div key={crumb.dn} className="flex items-center">
-                        <ChevronRight className="h-4 w-4 mx-1 opacity-30 shrink-0" />
+                      <div key={crumb.dn} className='flex items-center'>
+                        <ChevronRight className='h-4 w-4 mx-1 opacity-30 shrink-0' />
                         <Button
-                          variant="ghost"
-                          size="sm"
+                          variant='ghost'
+                          size='sm'
                           disabled={!linkedOu || isLast}
                           className={cn(
-                            "h-8 px-2 whitespace-nowrap transition-all",
-                            isLast ? "text-foreground font-semibold cursor-default hover:bg-transparent" : "text-muted-foreground hover:text-primary hover:bg-background",
-                            !linkedOu && !isLast && "opacity-50 cursor-not-allowed"
+                            'h-8 px-2 whitespace-nowrap transition-all',
+                            isLast
+                              ? 'text-foreground font-semibold cursor-default hover:bg-transparent'
+                              : 'text-muted-foreground hover:text-primary hover:bg-background',
+                            !linkedOu && !isLast && 'opacity-50 cursor-not-allowed'
                           )}
                           onClick={() => linkedOu && handleSelectOU(linkedOu.dn, linkedOu)}
                         >
@@ -440,39 +457,31 @@ export default function ADManagementPage() {
                 {/* Object Type Tabs */}
                 <Tabs
                   value={objectType}
-                  onValueChange={(value) =>
-                    handleObjectTypeChange(value as ObjectType)
-                  }
+                  onValueChange={(value) => handleObjectTypeChange(value as ObjectType)}
                 >
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="user" className="gap-2">
-                      <Users className="h-4 w-4" />
-                      <span className="hidden sm:inline">
-                        {UI_LABELS.ad.users}
-                      </span>
+                  <TabsList className='grid w-full grid-cols-3'>
+                    <TabsTrigger value='user' className='gap-2'>
+                      <Users className='h-4 w-4' />
+                      <span className='hidden sm:inline'>{UI_LABELS.ad.users}</span>
                     </TabsTrigger>
-                    <TabsTrigger value="computer" className="gap-2">
-                      <Monitor className="h-4 w-4" />
-                      <span className="hidden sm:inline">
-                        {UI_LABELS.ad.computers}
-                      </span>
+                    <TabsTrigger value='computer' className='gap-2'>
+                      <Monitor className='h-4 w-4' />
+                      <span className='hidden sm:inline'>{UI_LABELS.ad.computers}</span>
                     </TabsTrigger>
-                    <TabsTrigger value="group" className="gap-2">
-                      <Users2 className="h-4 w-4" />
-                      <span className="hidden sm:inline">
-                        {UI_LABELS.ad.groups}
-                      </span>
+                    <TabsTrigger value='group' className='gap-2'>
+                      <Users2 className='h-4 w-4' />
+                      <span className='hidden sm:inline'>{UI_LABELS.ad.groups}</span>
                     </TabsTrigger>
                   </TabsList>
 
                   {/* User Tab */}
-                  <TabsContent value="user" className="space-y-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <TabsContent value='user' className='space-y-4'>
+                    <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
                       <FilterForm
                         onSearch={setSearchValue}
                         searchPlaceholder={`Search ${UI_LABELS.ad.users.toLowerCase()}...`}
                       />
-                      <Button size="sm" onClick={() => openCreateForm('user')}>
+                      <Button size='sm' onClick={() => openCreateForm('user')}>
                         {UI_LABELS.ad.addUser}
                       </Button>
                     </div>
@@ -486,7 +495,7 @@ export default function ADManagementPage() {
                       onGroups={handleManageGroups}
                       onToggleStatus={handleToggleStatus}
                       onDelete={handleDelete}
-                      searchKey="displayName"
+                      searchKey='displayName'
                       searchValue={searchValue}
                       isLoading={isLoading}
                       emptyMessage={`No ${UI_LABELS.ad.users.toLowerCase()} found`}
@@ -494,7 +503,7 @@ export default function ADManagementPage() {
                   </TabsContent>
 
                   {/* Computer Tab */}
-                  <TabsContent value="computer" className="space-y-4">
+                  <TabsContent value='computer' className='space-y-4'>
                     <FilterForm
                       onSearch={setSearchValue}
                       searchPlaceholder={`Search ${UI_LABELS.ad.computers.toLowerCase()}...`}
@@ -506,7 +515,7 @@ export default function ADManagementPage() {
                       onMove={handleMove}
                       onToggleStatus={handleToggleStatus}
                       onDelete={handleDelete}
-                      searchKey="cn"
+                      searchKey='cn'
                       searchValue={searchValue}
                       isLoading={isLoading}
                       emptyMessage={`No ${UI_LABELS.ad.computers.toLowerCase()} found`}
@@ -514,13 +523,13 @@ export default function ADManagementPage() {
                   </TabsContent>
 
                   {/* Group Tab */}
-                  <TabsContent value="group" className="space-y-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <TabsContent value='group' className='space-y-4'>
+                    <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
                       <FilterForm
                         onSearch={setSearchValue}
                         searchPlaceholder={`Search ${UI_LABELS.ad.groups.toLowerCase()}...`}
                       />
-                      <Button size="sm" onClick={() => openCreateForm('group')}>
+                      <Button size='sm' onClick={() => openCreateForm('group')}>
                         {UI_LABELS.ad.addGroup}
                       </Button>
                     </div>
@@ -533,7 +542,7 @@ export default function ADManagementPage() {
                       onGroups={handleManageGroups}
                       onMembers={handleViewMembers}
                       onDelete={handleDelete}
-                      searchKey="cn"
+                      searchKey='cn'
                       searchValue={searchValue}
                       isLoading={isLoading}
                       emptyMessage={`No ${UI_LABELS.ad.groups.toLowerCase()} found`}
@@ -606,7 +615,10 @@ export default function ADManagementPage() {
         onClose={() => setObjectForGroups(null)}
         objectDN={objectForGroups?.dn || ''}
         objectName={
-          objectForGroups?.displayName || objectForGroups?.cn || objectForGroups?.sAMAccountName || ''
+          objectForGroups?.displayName ||
+          objectForGroups?.cn ||
+          objectForGroups?.sAMAccountName ||
+          ''
         }
         memberOf={objectForGroups?.memberOf}
         onSuccess={refreshCurrentData}
@@ -622,7 +634,7 @@ export default function ADManagementPage() {
         onSuccess={refreshCurrentData}
       />
 
-      <GroupMembersModal
+      <ObjectMembersModal
         isOpen={!!groupForMembers}
         onClose={() => setGroupForMembers(null)}
         groupDN={groupForMembers?.dn || ''}

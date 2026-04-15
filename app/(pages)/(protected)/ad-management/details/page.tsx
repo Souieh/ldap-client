@@ -1,14 +1,28 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { ObjectMembers } from '@/components/ad/object-members';
+import { ObjectParents } from '@/components/ad/object-parents';
+import { ObjectPermissions } from '@/components/ad/object-permissions';
 import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ChevronLeft, Loader2, User, Users2, Monitor, Mail, Shield, Calendar, Clock, Briefcase, ListFilter } from 'lucide-react';
-import { toast } from 'sonner';
 import { getAccountStatus, isAccountEnabled } from '@/lib/constants/ldap-attributes';
-import { ObjectPermissions } from '@/components/ad/object-permissions';
+import {
+  Briefcase,
+  Calendar,
+  ChevronLeft,
+  Clock,
+  Loader2,
+  Mail,
+  Monitor,
+  Shield,
+  User,
+  Users2,
+} from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 function DetailsContent() {
   const searchParams = useSearchParams();
@@ -67,17 +81,17 @@ function DetailsContent() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Loading object details...</p>
+      <div className='flex flex-col items-center justify-center min-h-[400px]'>
+        <Loader2 className='h-8 w-8 animate-spin text-primary mb-4' />
+        <p className='text-muted-foreground'>Loading object details...</p>
       </div>
     );
   }
 
-  if (!item) {
+  if (!dn || !item) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <p className="text-xl font-semibold mb-4">Object not found</p>
+      <div className='flex flex-col items-center justify-center min-h-[400px]'>
+        <p className='text-xl font-semibold mb-4'>Object not found</p>
         <Button onClick={() => router.back()}>Go Back</Button>
       </div>
     );
@@ -87,175 +101,110 @@ function DetailsContent() {
   const isComputer = item.objectClass.includes('computer');
   const isGroup = item.objectClass.includes('group');
 
-  const memberships = Array.isArray(item.memberOf) ? item.memberOf : item.memberOf ? [item.memberOf] : [];
+  const memberships = Array.isArray(item.memberOf)
+    ? item.memberOf
+    : item.memberOf
+      ? [item.memberOf]
+      : [];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
-      <div className="flex-none mb-6">
-        <Button variant="ghost" onClick={() => router.back()} className="gap-2">
-          <ChevronLeft className="h-4 w-4" />
+    <div className='flex flex-col  '>
+      <div className='flex-none mb-6'>
+        <Button variant='ghost' onClick={() => router.back()} className='gap-2'>
+          <ChevronLeft className='h-4 w-4' />
           Back to AD Manager
         </Button>
       </div>
 
-      <div className="flex flex-1 gap-8 overflow-hidden">
+      <div className='flex flex-1 gap-8 overflow-hidden'>
         {/* Left Column: Basic Info & Actions - Sticky/Non-scrolling wrapper */}
-        <div className="w-80 flex-none space-y-6 overflow-y-auto pr-2 custom-scrollbar">
-          <div className="bg-card border rounded-xl p-6 shadow-sm">
-            <div className="flex flex-col items-center text-center">
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                {isUser && <User className="h-10 w-10 text-primary" />}
-                {isComputer && <Monitor className="h-10 w-10 text-primary" />}
-                {isGroup && <Users2 className="h-10 w-10 text-primary" />}
+        <div className='w-80 flex-none space-y-6 overflow-y-auto pr-2 custom-scrollbar'>
+          <div className='bg-card border rounded-xl p-6 shadow-sm'>
+            <div className='flex flex-col items-center text-center'>
+              <div className='w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4'>
+                {isUser && <User className='h-10 w-10 text-primary' />}
+                {isComputer && <Monitor className='h-10 w-10 text-primary' />}
+                {isGroup && <Users2 className='h-10 w-10 text-primary' />}
               </div>
-              <h1 className="text-xl font-bold break-all">{item.displayName || item.cn}</h1>
-              <p className="text-sm text-muted-foreground mb-4 font-mono text-xs">{item.sAMAccountName}</p>
+              <h1 className='text-xl font-bold break-all'>{item.displayName || item.cn}</h1>
+              <p className='text-sm text-muted-foreground mb-4 font-mono text-xs'>
+                {item.sAMAccountName}
+              </p>
 
               {(isUser || isComputer) && (
-                <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  isAccountEnabled(item.userAccountControl)
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-red-100 text-red-700'
-                }`}>
+                <div
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    isAccountEnabled(item.userAccountControl)
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
+                  }`}
+                >
                   {getAccountStatus(item.userAccountControl)}
                 </div>
               )}
             </div>
 
-            <div className="mt-8 space-y-4 pt-6 border-t">
+            <div className='mt-8 space-y-4 pt-6 border-t'>
               {item.mail && (
-                <div className="flex items-center gap-3 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="truncate">{item.mail}</span>
+                <div className='flex items-center gap-3 text-sm'>
+                  <Mail className='h-4 w-4 text-muted-foreground shrink-0' />
+                  <span className='truncate'>{item.mail}</span>
                 </div>
               )}
               {item.title && (
-                <div className="flex items-center gap-3 text-sm">
-                  <Briefcase className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className='flex items-center gap-3 text-sm'>
+                  <Briefcase className='h-4 w-4 text-muted-foreground shrink-0' />
                   <span>{item.title}</span>
                 </div>
               )}
               {item.department && (
-                <div className="flex items-center gap-3 text-sm">
-                  <Shield className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className='flex items-center gap-3 text-sm'>
+                  <Shield className='h-4 w-4 text-muted-foreground shrink-0' />
                   <span>{item.department}</span>
                 </div>
               )}
-              <div className="flex items-center gap-3 text-sm">
-                <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="text-xs">Created: {item.whenCreated}</span>
+              <div className='flex items-center gap-3 text-sm'>
+                <Calendar className='h-4 w-4 text-muted-foreground shrink-0' />
+                <span className='text-xs'>Created: {item.whenCreated}</span>
               </div>
-              <div className="flex items-center gap-3 text-sm">
-                <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="text-xs">Modified: {item.whenChanged}</span>
+              <div className='flex items-center gap-3 text-sm'>
+                <Clock className='h-4 w-4 text-muted-foreground shrink-0' />
+                <span className='text-xs'>Modified: {item.whenChanged}</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-card border rounded-xl p-6 shadow-sm">
-            <h3 className="text-sm font-semibold mb-4">Distinguished Name</h3>
-            <p className="text-[10px] font-mono bg-muted p-3 rounded-md break-all leading-relaxed text-muted-foreground">
+          <div className='bg-card border rounded-xl p-6 shadow-sm'>
+            <h3 className='text-sm font-semibold mb-4'>Distinguished Name</h3>
+            <p className='text-[10px] font-mono bg-muted p-3 rounded-md break-all leading-relaxed text-muted-foreground'>
               {item.dn}
             </p>
           </div>
         </div>
 
         {/* Right Column: Tabbed Detailed Lists - Independent scroll */}
-        <div className="flex-1 min-w-0 bg-card border rounded-xl shadow-sm flex flex-col overflow-hidden">
-          <Tabs defaultValue={isGroup ? "members" : "member-of"} className="flex flex-col h-full">
-            <div className="px-6 pt-4 border-b bg-muted/20">
-              <TabsList className="bg-transparent h-auto p-0 gap-6">
-                {isGroup && (
-                  <TabsTrigger
-                    value="members"
-                    className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-2 font-semibold"
-                  >
-                    Members
-                  </TabsTrigger>
-                )}
-                <TabsTrigger
-                  value="member-of"
-                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-2 font-semibold"
-                >
-                  Member Of
-                </TabsTrigger>
-                <TabsTrigger
-                  value="permissions"
-                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-2 font-semibold"
-                >
-                  Permissions
-                </TabsTrigger>
+        <div className='flex-1 min-w-0 bg-card border rounded-xl shadow-sm flex flex-col overflow-hidden'>
+          <Tabs defaultValue={isGroup ? 'members' : 'member-of'}>
+            <div className='px-4 pt-4 bg-muted/20'>
+              <TabsList>
+                {isGroup && <TabsTrigger value='members'>Members</TabsTrigger>}
+                <TabsTrigger value='member-of'>Member Of</TabsTrigger>
+                <TabsTrigger value='permissions'>Permissions</TabsTrigger>
               </TabsList>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            <div className='flex-1 overflow-y-auto bg-muted/20'>
               {isGroup && (
-                <TabsContent value="members" className="m-0 focus-visible:ring-0">
-                  <div className="px-6 py-4 border-b bg-muted/10 flex items-center justify-between sticky top-0 z-10">
-                    <h3 className="text-sm font-semibold flex items-center gap-2">
-                      <Users2 className="h-4 w-4 text-primary" />
-                      Direct Members ({members.length})
-                    </h3>
-                    {isLoadingMembers && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-                  </div>
-                  {members.length > 0 ? (
-                    <div className="divide-y">
-                      {members.map((member) => (
-                        <div key={member.dn} className="px-6 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors group">
-                          <div className="min-w-0 flex items-center gap-3">
-                            {member.type === 'User' && <User className="h-4 w-4 text-blue-500" />}
-                            {member.type === 'Group' && <Users2 className="h-4 w-4 text-purple-500" />}
-                            {member.type === 'Computer' && <Monitor className="h-4 w-4 text-green-500" />}
-                            <div className="truncate">
-                              <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">{member.displayName || member.cn}</p>
-                              <p className="text-[10px] text-muted-foreground truncate font-mono">{member.sAMAccountName}</p>
-                            </div>
-                          </div>
-                          <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full border">{member.type}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-12 text-center text-muted-foreground text-sm italic">
-                      No members found in this group.
-                    </div>
-                  )}
+                <TabsContent value='members' className='m-0 focus-visible:ring-0 p-2'>
+                  <ObjectMembers groupDN={dn} groupName={item.name} />
                 </TabsContent>
               )}
 
-              <TabsContent value="member-of" className="m-0 focus-visible:ring-0">
-                <div className="px-6 py-4 border-b bg-muted/10 sticky top-0 z-10">
-                  <h3 className="text-sm font-semibold flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-primary" />
-                    Parent Groups ({memberships.length})
-                  </h3>
-                </div>
-                {memberships.length > 0 ? (
-                  <div className="divide-y">
-                    {memberships.map((groupDN: string) => {
-                      const groupName = groupDN.split(',')[0].replace(/^CN=/i, '');
-                      return (
-                        <div key={groupDN} className="px-6 py-4 flex flex-col hover:bg-muted/50 transition-colors group">
-                          <p className="text-sm font-medium group-hover:text-primary transition-colors">{groupName}</p>
-                          <p className="text-[10px] text-muted-foreground truncate font-mono">{groupDN}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="p-12 text-center text-muted-foreground text-sm italic">
-                    This object is not a member of any groups.
-                  </div>
-                )}
+              <TabsContent value='member-of' className='m-0 focus-visible:ring-0 p-2'>
+                <ObjectParents objectDN={dn} objectName={item.name} />
               </TabsContent>
 
-              <TabsContent value="permissions" className="m-0 focus-visible:ring-0">
-                <div className="px-6 py-4 border-b bg-muted/10 sticky top-0 z-10">
-                  <h3 className="text-sm font-semibold flex items-center gap-2">
-                    <ListFilter className="h-4 w-4 text-primary" />
-                    Security Identifiers & Rights
-                  </h3>
-                </div>
+              <TabsContent value='permissions' className='m-0 focus-visible:ring-0'>
                 <ObjectPermissions dn={item.dn} hideCard={true} />
               </TabsContent>
             </div>
@@ -268,18 +217,140 @@ function DetailsContent() {
 
 export default function ADObjectDetailsPage() {
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className='min-h-screen bg-muted/30'>
       <Header />
-      <main className="container mx-auto py-8 px-4 max-w-5xl">
-        <Suspense fallback={
-          <div className="flex flex-col items-center justify-center min-h-[400px]">
-            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-            <p className="text-muted-foreground">Loading details...</p>
-          </div>
-        }>
+      <main className='container mx-auto py-8 px-4 max-w-5xl'>
+        <Suspense
+          fallback={
+            <div className='flex flex-col items-center justify-center min-h-[400px]'>
+              <Loader2 className='h-8 w-8 animate-spin text-primary mb-4' />
+              <p className='text-muted-foreground'>Loading details...</p>
+            </div>
+          }
+        >
           <DetailsContent />
         </Suspense>
       </main>
     </div>
   );
 }
+
+const DirectMembers = ({ members, isLoading }: { members: any[]; isLoading: boolean }) => {
+  const [searchKey, setSearchKey] = useState('');
+
+  const filteredMembers = useMemo(() => {
+    if (!searchKey) return members;
+    const lowerKey = searchKey.toLowerCase();
+    return members.filter((member) => {
+      const name = (member.displayName || member.cn || '').toLowerCase();
+      const sam = (member.sAMAccountName || '').toLowerCase();
+      return name.includes(lowerKey) || sam.includes(lowerKey);
+    });
+  }, [members, searchKey]);
+
+  return (
+    <div>
+      <div className='p-4 border-b bg-muted/5'>
+        <div className='relative'>
+          <Input
+            placeholder='Filter members by name or account...'
+            value={searchKey}
+            onChange={(e) => setSearchKey(e.target.value)}
+            className='h-9 text-sm'
+          />
+        </div>
+      </div>
+      {isLoading && <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />}
+
+      {members.length === 0 ? (
+        <div className='p-12 text-center text-muted-foreground text-sm italic'>
+          No members found in this group.
+        </div>
+      ) : filteredMembers.length > 0 ? (
+        <div className='divide-y'>
+          {filteredMembers.map((member) => (
+            <div
+              key={member.dn}
+              className='px-6 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors group'
+            >
+              <div className='min-w-0 flex items-center gap-3'>
+                {member.type === 'User' && <User className='h-4 w-4 text-blue-500' />}
+                {member.type === 'Group' && <Users2 className='h-4 w-4 text-purple-500' />}
+                {member.type === 'Computer' && <Monitor className='h-4 w-4 text-green-500' />}
+                <div className='truncate'>
+                  <p className='text-sm font-medium truncate group-hover:text-primary transition-colors'>
+                    {member.displayName || member.cn}
+                  </p>
+                  <p className='text-[10px] text-muted-foreground truncate font-mono'>
+                    {member.sAMAccountName}
+                  </p>
+                </div>
+              </div>
+              <span className='text-[10px] bg-muted px-2 py-0.5 rounded-full border'>
+                {member.type}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className='p-12 text-center text-muted-foreground text-sm italic'>
+          No members match your filter.
+        </div>
+      )}
+    </div>
+  );
+};
+
+const GroupMembers = ({ memberships }: { memberships: any[] }) => {
+  const [searchKey, setSearchKey] = useState('');
+
+  const filteredMemberships = useMemo(() => {
+    if (!searchKey) return memberships;
+    const lowerKey = searchKey.toLowerCase();
+    return memberships.filter((dn: string) => {
+      const groupName = dn.split(',')[0].replace(/^CN=/i, '').toLowerCase();
+      return dn.toLowerCase().includes(lowerKey) || groupName.includes(lowerKey);
+    });
+  }, [memberships, searchKey]);
+
+  return (
+    <div>
+      <div className='p-4 border-b bg-muted/5'>
+        <div className='relative'>
+          <Input
+            placeholder='Filter groups by name or DN...'
+            value={searchKey}
+            onChange={(e) => setSearchKey(e.target.value)}
+            className='h-9 text-sm'
+          />
+        </div>
+      </div>
+      {memberships.length === 0 ? (
+        <div className='p-12 text-center text-muted-foreground text-sm italic'>
+          This object is not a member of any groups.
+        </div>
+      ) : filteredMemberships.length > 0 ? (
+        <div className='divide-y'>
+          {filteredMemberships.map((groupDN: string) => {
+            const groupName = groupDN.split(',')[0].replace(/^CN=/i, '');
+            return (
+              <div
+                key={groupDN}
+                className='px-6 py-4 flex flex-col hover:bg-muted/50 transition-colors group'
+              >
+                <p className='text-sm font-medium group-hover:text-primary transition-colors'>
+                  {groupName}
+                </p>
+                <p className='text-[10px] text-muted-foreground truncate font-mono'>{groupDN}</p>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className='p-12 text-center text-muted-foreground text-sm italic'>
+          No groups match your filter.
+        </div>
+      )}
+    </div>
+  );
+};

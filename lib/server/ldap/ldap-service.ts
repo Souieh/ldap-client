@@ -11,8 +11,15 @@ import {
   updatePassword,
 } from './ldap-objects';
 import { createOU, deleteOU, searchOUs } from './ldap-ous';
-import { getGroupMembers, getObjectByDN, searchComputers, searchGroups, searchUsers } from './ldap-search';
 import { getObjectPermissions } from './ldap-permissions';
+import {
+  getGroupMembers,
+  getObjectByDN,
+  getObjectParents,
+  searchComputers,
+  searchGroups,
+  searchUsers,
+} from './ldap-search';
 
 export class LDAPService {
   async createObject(
@@ -128,6 +135,15 @@ export class LDAPService {
     return getGroupMembers(config, userDN, password, groupDN);
   }
 
+  async getObjectParents(
+    config: LDAPConfig,
+    userDN: string,
+    password: string,
+    groupDN: string
+  ): Promise<any[]> {
+    return getObjectParents(config, userDN, password, groupDN);
+  }
+
   async getObjectByDN(
     config: LDAPConfig,
     userDN: string,
@@ -137,12 +153,7 @@ export class LDAPService {
     return getObjectByDN(config, userDN, password, dn);
   }
 
-  async getObjectPermissions(
-    config: LDAPConfig,
-    userDN: string,
-    password: string,
-    dn: string
-  ) {
+  async getObjectPermissions(config: LDAPConfig, userDN: string, password: string, dn: string) {
     return getObjectPermissions(config, userDN, password, dn);
   }
 
