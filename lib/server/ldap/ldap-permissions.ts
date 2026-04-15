@@ -71,17 +71,26 @@ export async function getObjectPermissions(
       }
     }
 
-    // Well-known SIDs map (simplified)
-    const wellKnownSids: Record<string, string> = {
+    // Well-known SIDs and RIDs
+    const SYSTEM_SIDS: Record<string, string> = {
+      'S-1-5-18': 'Local System',
+      'S-1-5-11': 'Authenticated Users',
+      'S-1-1-0': 'Everyone',
       'S-1-5-32-544': 'Administrators',
       'S-1-5-32-545': 'Users',
       'S-1-5-32-548': 'Account Operators',
-      'S-1-5-11': 'Authenticated Users',
-      'S-1-5-18': 'LocalSystem',
       'S-1-5-19': 'LocalService',
       'S-1-5-20': 'NetworkService',
-      'S-1-1-0': 'Everyone',
       'S-1-5-7': 'Anonymous',
+    };
+
+    const WELL_KNOWN_RIDS: Record<string, string> = {
+      '500': 'Administrator',
+      '512': 'Domain Admins',
+      '513': 'Domain Users',
+      '514': 'Domain Guests',
+      '515': 'Domain Computers',
+      '519': 'Enterprise Admins',
     };
 
     return sd.dacl.map(ace => {
@@ -90,9 +99,20 @@ export async function getObjectPermissions(
       else if (ace.flags & 0x01) appliesTo = 'Child objects only';
       else if (ace.flags & 0x02) appliesTo = 'This object and immediate children';
 
+      // Humanize SID
+      let humanName = sidToName.get(ace.sid);
+      if (!humanName) {
+        if (SYSTEM_SIDS[ace.sid]) {
+          humanName = SYSTEM_SIDS[ace.sid];
+        } else {
+          const rid = ace.sid.split('-').pop() || '';
+          humanName = WELL_KNOWN_RIDS[rid];
+        }
+      }
+
       return {
         sid: ace.sid,
-        name: sidToName.get(ace.sid) || wellKnownSids[ace.sid] || ace.sid,
+        name: humanName || ace.sid,
         type: ace.type,
         rights: getRightsFromMask(ace.mask),
         inherited: ace.inherited,
