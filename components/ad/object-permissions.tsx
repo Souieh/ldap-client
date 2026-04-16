@@ -68,7 +68,7 @@ export function ObjectPermissions({ objectDN }: ObjectPermissionsProps) {
     toast.info('Permissions management logic is still in development on the server side.');
   };
 
-  const filtredPermissions = useMemo(
+  const filteredPermissions = useMemo(
     () =>
       searchKey?.length > 0
         ? permissions.filter((p) =>
@@ -112,8 +112,8 @@ export function ObjectPermissions({ objectDN }: ObjectPermissionsProps) {
       </div>
 
       <div className='divide-y flex-1 overflow-y-auto'>
-        {filtredPermissions.length > 0 ? (
-          filtredPermissions.map((ace, idx) => (
+        {filteredPermissions.length > 0 ? (
+          filteredPermissions.map((ace, idx) => (
             <div
               key={`${ace.sid}-${idx}`}
               className='px-6 py-4 hover:bg-muted/50 transition-colors group'

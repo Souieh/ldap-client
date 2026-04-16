@@ -31,11 +31,11 @@ const sizeClasses = {
   sm: 'sm:max-w-sm',
   md: 'sm:max-w-md',
   lg: 'sm:max-w-lg',
-  xl: 'sm:max-w-xl',
-  '2xl': 'sm:max-w-2xl',
-  '3xl': 'sm:max-w-3xl',
-  '4xl': 'sm:max-w-4xl',
-  '5xl': 'sm:max-w-5xl',
+  xl: 'sm:max-w-2xl', // Restored to original value
+  '2xl': 'sm:max-w-3xl',
+  '3xl': 'sm:max-w-4xl',
+  '4xl': 'sm:max-w-5xl',
+  '5xl': 'sm:max-w-6xl',
   full: 'sm:max-w-[95vw]',
 };
 

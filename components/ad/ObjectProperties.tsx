@@ -1,9 +1,10 @@
 'use client';
 
+import React, { FC, useMemo, useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/modal';
+import { Button } from '@/components/ui/button';
 import { Edit, Info, Shield, Users, Users2, Loader2, Settings } from 'lucide-react';
-import { FC, useMemo, useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ObjectMembers } from './object-members';
 import { ObjectParents } from './object-parents';
 import { ObjectPermissions } from './object-permissions';
@@ -19,6 +20,7 @@ interface GroupObjectsProps {
   objectName: string;
   objectType: string;
 }
+
 interface GroupObjectsModalProps extends GroupObjectsProps {
   isOpen: boolean;
   onClose: () => void;
@@ -77,7 +79,12 @@ const tabs: TabConfig[] = [
   },
 ];
 
-export function ObjectProperties({ objectDN, objectName, objectType, onSuccess }: GroupObjectsProps & { onSuccess?: (newDN?: string) => void }) {
+export function ObjectProperties({
+  objectDN,
+  objectName,
+  objectType,
+  onSuccess
+}: GroupObjectsProps & { onSuccess?: (newDN?: string) => void }) {
   const [item, setItem] = useState<any>(null);
   const [currentDN, setCurrentDN] = useState(objectDN);
   const [isLoading, setIsLoading] = useState(true);
@@ -110,7 +117,8 @@ export function ObjectProperties({ objectDN, objectName, objectType, onSuccess }
   };
 
   useEffect(() => {
-    loadDetails();
+    loadDetails(objectDN);
+    setCurrentDN(objectDN);
   }, [objectDN]);
 
   const availableTabs = useMemo(
@@ -186,7 +194,6 @@ export function ObjectProperties({ objectDN, objectName, objectType, onSuccess }
         type={objectType}
         onSuccess={() => {
           setIsDeleteOpen(false);
-          // When deleted, we want to close the properties modal too
           if (onSuccess) onSuccess();
         }}
       />
@@ -234,7 +241,6 @@ export function ObjectPropertiesModal({
         objectType={objectType}
         onSuccess={(newDN) => {
           if (onSuccess) onSuccess(newDN);
-          // If it was a delete (no newDN), close the modal
           if (!newDN) {
             onClose();
           }

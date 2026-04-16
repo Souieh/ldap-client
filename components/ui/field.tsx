@@ -78,7 +78,7 @@ const fieldVariants = cva(
   },
 )
 
-function Field({
+export function Field({
   className,
   orientation = 'vertical',
   ...props
@@ -231,7 +231,6 @@ function FieldError({
 }
 
 export {
-  Field,
   FieldLabel,
   FieldDescription,
   FieldError,
