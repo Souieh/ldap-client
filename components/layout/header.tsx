@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { UI_LABELS } from '@/lib/constants/ui-labels';
 import { LogOut, Menu, Network, Settings, User, X } from 'lucide-react';
+import { ThemeToggle } from './theme-toggle';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -81,6 +82,7 @@ export function Header() {
 
         {/* Right Actions */}
         <div className='flex items-center gap-2'>
+          <ThemeToggle />
           {session?.authenticated && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

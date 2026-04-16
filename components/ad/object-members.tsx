@@ -21,9 +21,10 @@ interface GroupMembersProps {
   objectDN: string;
   objectName: string;
   onSuccess?: () => void;
+  hideContainer?: boolean;
 }
 
-export function ObjectMembers({ objectDN, objectName, onSuccess }: GroupMembersProps) {
+export function ObjectMembers({ objectDN, objectName, onSuccess, hideContainer = false }: GroupMembersProps) {
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -187,15 +188,15 @@ export function ObjectMembers({ objectDN, objectName, onSuccess }: GroupMembersP
       </div>
 
       {/* Member List */}
-      <div className='border rounded-lg overflow-hidden bg-card shadow-sm'>
-        <div className='bg-muted/30 px-4 py-2 border-b flex items-center justify-between'>
+      <div className={hideContainer ? 'flex flex-col flex-1 min-h-0' : 'border rounded-lg overflow-hidden bg-card shadow-sm flex flex-col flex-1 min-h-0'}>
+        <div className='bg-muted/30 px-4 py-2 border-b flex items-center justify-between flex-none rounded-t-lg'>
           <h4 className='text-[10px] font-bold text-muted-foreground uppercase tracking-wider'>
             Direct Members ({members.length})
           </h4>
           {isLoading && <Loader2 className='h-3 w-3 animate-spin text-muted-foreground' />}
         </div>
 
-        <div className='divide-y'>
+        <div className='divide-y flex-1'>
           {isLoading && members.length === 0 ? (
             <div className='flex flex-col items-center justify-center p-12 text-center text-muted-foreground'>
               <Loader2 className='h-8 w-8 animate-spin mb-2' />

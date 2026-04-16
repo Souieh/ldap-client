@@ -24,11 +24,11 @@ export function ObjectInfo({ item }: ObjectInfoProps) {
   return (
     <div className='space-y-4 py-2'>
       {isGroup ? (
-        <ADGroupDetails group={item} />
+        <ADGroupDetails group={item} noContainer />
       ) : isComputer ? (
-        <ADComputerDetails computer={item} />
+        <ADComputerDetails computer={item} noContainer />
       ) : isUser ? (
-        <ADUserDetails user={item} />
+        <ADUserDetails user={item} noContainer />
       ) : (
         <div className='p-8 text-center border rounded-lg bg-muted/20'>
           <p className='text-muted-foreground italic'>

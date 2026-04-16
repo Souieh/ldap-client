@@ -4,6 +4,7 @@ import { ADGroup } from '@/lib/types/config';
 
 interface ADGroupDetailsProps {
   group: ADGroup;
+  noContainer?: boolean;
 }
 
 function Field({ label, value, mono }: { label: string; value?: string | null; mono?: boolean }) {
@@ -48,12 +49,12 @@ function getInitials(name: string) {
   return name.split(/[\s_-]+/).filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'G';
 }
 
-export function ADGroupDetails({ group }: ADGroupDetailsProps) {
+export function ADGroupDetails({ group, noContainer = false }: ADGroupDetailsProps) {
   const groupType = GROUP_TYPE_MAP[String(group.groupType)] ?? null;
   const managerCN = group.managedBy?.split(',')[0]?.replace(/^CN=/i, '') ?? null;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5 shadow-sm space-y-1">
+    <div className={noContainer ? "space-y-1" : "rounded-lg border border-border bg-card p-5 shadow-sm space-y-1"}>
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-5">

@@ -59,6 +59,7 @@ const tabs: TabConfig[] = [
     icon: <Users className='h-4 w-4 text-primary' />,
     title: 'Member Of',
     content: ObjectParents,
+    props: { hideContainer: true }
   },
   {
     key: 'Members',
@@ -66,6 +67,7 @@ const tabs: TabConfig[] = [
     title: 'Members',
     content: ObjectMembers,
     showFor: ['group'],
+    props: { hideContainer: true }
   },
   {
     key: 'Permissions',
@@ -147,8 +149,8 @@ export function ObjectProperties({ objectDN, objectName, objectType, onSuccess }
         </div>
       </div>
 
-      <div className='flex-1 min-w-0 bg-card border rounded-xl shadow-sm flex flex-col overflow-hidden'>
-        <Tabs defaultValue={availableTabs[0].key}>
+      <div className='flex-1 min-w-0 bg-card border rounded-xl shadow-sm flex flex-col overflow-hidden h-[600px]'>
+        <Tabs defaultValue={availableTabs[0].key} className="flex flex-col h-full">
           <div className='px-4 pt-4 bg-muted/20 inline-flex overflow-x-auto no-scrollbar'>
             <TabsList className='flex-start whitespace-nowrap'>
               {availableTabs.map((t) => (
@@ -160,9 +162,9 @@ export function ObjectProperties({ objectDN, objectName, objectType, onSuccess }
             </TabsList>
           </div>
 
-          <div className='flex-1 overflow-y-auto bg-muted/20'>
+          <div className='flex-1 bg-muted/20 overflow-y-auto'>
             {availableTabs.map((tab) => (
-              <TabsContent key={tab.key} value={tab.key} className='m-0 focus-visible:ring-0 p-2'>
+              <TabsContent key={tab.key} value={tab.key} className='m-0 focus-visible:ring-0 p-2 h-full'>
                 <tab.content
                   objectDN={currentDN}
                   objectName={objectName}

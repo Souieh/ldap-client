@@ -4,6 +4,7 @@ import { ADComputer } from '@/lib/types/config';
 
 interface ADComputerDetailsProps {
   computer: ADComputer;
+  noContainer?: boolean;
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
@@ -15,10 +16,10 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function ADComputerDetails({ computer }: ADComputerDetailsProps) {
+export function ADComputerDetails({ computer, noContainer = false }: ADComputerDetailsProps) {
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+      <div className={noContainer ? "space-y-4" : "rounded-lg border border-border bg-card p-5 shadow-sm"}>
         <div className="mb-4">
           <h3 className="text-xl font-semibold">Computer details</h3>
           <p className="text-sm text-muted-foreground">Hardware and account information for the selected machine.</p>
