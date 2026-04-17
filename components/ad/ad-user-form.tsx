@@ -11,7 +11,7 @@ interface ADUserFormProps {
   isEditMode?: boolean;
 }
 
-const fields: FormField[] = [
+export const userFields: FormField[] = [
   // Identity
   { name: 'givenName',    label: 'First name',     type: 'text', required: true,  group: 'Identity' },
   { name: 'sn',           label: 'Last name',      type: 'text', required: true,  group: 'Identity' },
@@ -49,7 +49,7 @@ const fields: FormField[] = [
 export function ADUserForm({ values, onChange, onSubmit, isSubmitting = false, isEditMode = false }: ADUserFormProps) {
   return (
     <DynamicForm
-      fields={fields}
+      fields={userFields}
       values={values}
       onChange={onChange}
       onSubmit={onSubmit}

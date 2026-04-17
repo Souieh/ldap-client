@@ -1,7 +1,20 @@
+'use client';
+
 import { Github } from 'lucide-react';
 import Link from 'next/link';
+import { isTauri } from '@/lib/tauri-utils';
+import { useEffect, useState } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 
 export function Footer() {
+  const [version, setVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isTauri()) {
+      invoke<string>('get_app_version').then(setVersion).catch(console.error);
+    }
+  }, []);
+
   return (
     <footer className='w-full border-t border-border bg-background py-6'>
       <div className='container mx-auto px-4 flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row'>

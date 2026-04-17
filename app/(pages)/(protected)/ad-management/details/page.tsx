@@ -1,6 +1,6 @@
 'use client';
 
-import { ObjectProperties } from '@/components/ad/object-properties';
+import { ObjectProperties } from '@/components/ad/ObjectProperties';
 import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

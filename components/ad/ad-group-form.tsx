@@ -10,7 +10,7 @@ interface ADGroupFormProps {
   isEditMode?: boolean;
 }
 
-const fields: FormField[] = [
+export const groupFields: FormField[] = [
   // General
   { name: 'cn',             label: 'Group name',      type: 'text',     required: true, group: 'General' },
   { name: 'sAMAccountName', label: 'SAM account',     type: 'text',     required: true, group: 'General' },
@@ -40,7 +40,7 @@ const fields: FormField[] = [
 export function ADGroupForm({ values, onChange, onSubmit, isSubmitting = false, isEditMode = false }: ADGroupFormProps) {
   return (
     <DynamicForm
-      fields={fields}
+      fields={groupFields}
       values={values}
       onChange={onChange}
       onSubmit={onSubmit}

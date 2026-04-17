@@ -5,6 +5,7 @@ import { getAccountStatus } from '@/lib/constants/ldap-attributes';
 
 interface ADUserDetailsProps {
   user: ADUser;
+  noContainer?: boolean;
 }
 
 function getInitials(name?: string) {
@@ -31,12 +32,12 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function ADUserDetails({ user }: ADUserDetailsProps) {
+export function ADUserDetails({ user, noContainer = false }: ADUserDetailsProps) {
   const isActive = !((user.userAccountControl ?? 0) & 2);
   const managerCN = user.manager?.split(',')[0]?.replace(/^CN=/i, '') ?? null;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5 shadow-sm space-y-1">
+    <div className={noContainer ? "space-y-1" : "rounded-lg border border-border bg-card p-5 shadow-sm space-y-1"}>
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-5">

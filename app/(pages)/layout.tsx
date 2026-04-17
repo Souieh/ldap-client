@@ -1,4 +1,5 @@
 import { Footer } from '@/components/layout/footer';
+import { ThemeProvider } from '@/components/layout/theme-provider';
 import { Analytics } from '@vercel/analytics/next';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
@@ -37,12 +38,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='en'>
+    <html lang='en' suppressHydrationWarning>
       <body className='font-sans antialiased min-h-screen flex flex-col'>
-        <div className='flex-1'>{children}</div>
-        <Footer />
-        <Toaster richColors position='top-right' />
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        <ThemeProvider
+          attribute='class'
+          defaultTheme='system'
+          enableSystem
+          disableTransitionOnChange
+        >
+          <div className='flex-1'>{children}</div>
+          <Footer />
+          <Toaster richColors position='top-right' />
+          {process.env.NODE_ENV === 'production' && <Analytics />}
+        </ThemeProvider>
       </body>
     </html>
   );

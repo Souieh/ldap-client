@@ -12,7 +12,7 @@ interface MoveObjectModalProps {
   dn: string;
   name: string;
   ous: ADOU[];
-  onSuccess: () => Promise<void>;
+  onSuccess: (newDN?: string) => Promise<void> | void;
 }
 
 export function MoveObjectModal({ isOpen, onClose, dn, name, ous, onSuccess }: MoveObjectModalProps) {
@@ -34,9 +34,10 @@ export function MoveObjectModal({ isOpen, onClose, dn, name, ous, onSuccess }: M
       });
 
       if (!res.ok) throw new Error('Failed to move object');
+      const data = await res.json();
       
       toast.success(`Moved ${name} successfully`);
-      await onSuccess();
+      await onSuccess(data.newDN);
       onClose();
     } catch (error: any) {
       toast.error(error.message);

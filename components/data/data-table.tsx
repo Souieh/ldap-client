@@ -1,14 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronUp, ChevronDown, Edit2, Trash2, MoreHorizontal, FolderInput, Users, InfoIcon, KeyRound, UserCheck, UserX } from 'lucide-react';
+import { ChevronUp, ChevronDown, Settings2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
 export interface DataTableColumn<T> {
   id: string;
@@ -22,13 +16,6 @@ export interface DataTableColumn<T> {
 export interface DataTableProps<T> {
   columns: DataTableColumn<T>[];
   data: T[];
-  onEdit?: (item: T) => void;
-  onMove?: (item: T) => void;
-  onGroups?: (item: T) => void;
-  onMembers?: (item: T) => void;
-  onPassword?: (item: T) => void;
-  onToggleStatus?: (item: T) => { label: string; icon: React.ReactNode; onClick: (item: T) => void };
-  onDelete: (item: T) => void;
   onView?: (item: T) => void;
   searchKey?: keyof T;
   searchValue?: string;
@@ -42,13 +29,6 @@ export function DataTable<T extends { id?: string; dn?: string }>(
   const {
     columns,
     data,
-    onEdit,
-    onMove,
-    onGroups,
-    onMembers,
-    onPassword,
-    onToggleStatus,
-    onDelete,
     onView,
     searchKey,
     searchValue = '',
@@ -137,7 +117,7 @@ export function DataTable<T extends { id?: string; dn?: string }>(
                 )}
               </th>
             ))}
-            <th className="h-12 px-4 py-2 text-left font-medium text-foreground">
+            <th className="h-12 px-4 py-2 text-right font-medium text-foreground">
               Actions
             </th>
           </tr>
@@ -155,65 +135,16 @@ export function DataTable<T extends { id?: string; dn?: string }>(
                     : String(item[column.key] ?? '')}
                 </td>
               ))}
-              <td className="px-4 py-3">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {onView && (
-                    <DropdownMenuItem onClick={() => onView(item)}>
-                      <InfoIcon className="h-4 w-4 mr-2" />
-                      View Details
-                    </DropdownMenuItem>
-                  )}
-                  {onEdit && (
-                    <DropdownMenuItem onClick={() => onEdit(item)}>
-                      <Edit2 className="h-4 w-4 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                  )}
-                  {onPassword && (
-                    <DropdownMenuItem onClick={() => onPassword(item)}>
-                      <KeyRound className="h-4 w-4 mr-2" />
-                      Reset Password
-                    </DropdownMenuItem>
-                  )}
-                  {onMove && (
-                    <DropdownMenuItem onClick={() => onMove(item)}>
-                      <FolderInput className="h-4 w-4 mr-2" />
-                      Move to OU
-                    </DropdownMenuItem>
-                  )}
-                  {onGroups && (
-                    <DropdownMenuItem onClick={() => onGroups(item)}>
-                      <Users className="h-4 w-4 mr-2" />
-                      Manage Groups
-                    </DropdownMenuItem>
-                  )}
-                  {onMembers && (
-                    <DropdownMenuItem onClick={() => onMembers(item)}>
-                      <Users className="h-4 w-4 mr-2" />
-                      View Members
-                    </DropdownMenuItem>
-                  )}
-                  {onToggleStatus && (
-                    <DropdownMenuItem onClick={() => onToggleStatus(item).onClick(item)}>
-                      {onToggleStatus(item).icon}
-                      {onToggleStatus(item).label}
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem
-                    onClick={() => onDelete(item)}
-                    className="text-destructive"
-                  >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              <td className="px-4 py-3 text-right">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-2"
+                  onClick={() => onView?.(item)}
+                >
+                  <Settings2 className="h-4 w-4" />
+                  Properties
+                </Button>
               </td>
             </tr>
           ))}

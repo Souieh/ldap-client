@@ -131,6 +131,7 @@ export function mapToADComputer(entry: Entry): ADComputer {
         ? [objectClass]
         : [],
     cn: String(getEntryValue(entry, 'cn') || ''),
+    displayName: String(getEntryValue(entry, 'displayName') || ''),
     sAMAccountName: String(getEntryValue(entry, 'sAMAccountName') || ''),
     dNSHostName: String(getEntryValue(entry, 'dNSHostName') || ''),
     operatingSystem: String(getEntryValue(entry, 'operatingSystem') || ''),
@@ -156,6 +157,7 @@ export function mapToADGroup(entry: Entry): ADGroup {
         ? [objectClass]
         : [],
     cn: String(getEntryValue(entry, 'cn') || ''),
+    displayName: String(getEntryValue(entry, 'displayName') || ''),
     sAMAccountName: String(getEntryValue(entry, 'sAMAccountName') || ''),
     mail: String(getEntryValue(entry, 'mail') || ''),
     description: String(getEntryValue(entry, 'description') || ''),

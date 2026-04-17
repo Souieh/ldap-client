@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export interface FormField {
@@ -36,6 +36,7 @@ export interface DynamicFormProps {
   submitLabel?: string;
   isSubmitting?: boolean;
   layout?: 'vertical' | 'grid';
+  useTabs?: boolean;
 }
 
 export function DynamicForm({
@@ -46,6 +47,7 @@ export function DynamicForm({
   submitLabel = 'Submit',
   isSubmitting = false,
   layout = 'vertical',
+  useTabs = true,
 }: DynamicFormProps) {
   const handleChange = (fieldName: string, value: any) => onChange(fieldName, value);
 
@@ -119,7 +121,6 @@ export function DynamicForm({
     onSubmit?.(values);
   };
 
-  // Group fields preserving insertion order
   const grouped: { label: string; fields: FormField[] }[] = [];
   const seen = new Map<string, number>();
 
@@ -132,7 +133,6 @@ export function DynamicForm({
     grouped[seen.get(key)!].fields.push(field);
   }
 
-  // Tabs with a red dot if a required field in that section is empty
   const invalidTabs = new Set(
     grouped
       .filter((section) =>
@@ -142,26 +142,25 @@ export function DynamicForm({
   );
 
   const renderSection = (sectionFields: FormField[]) => (
-    <div className={layout === 'grid' ? 'grid grid-cols-2 gap-x-4 gap-y-3' : 'flex flex-col gap-3'}>
+    <div className={layout === 'grid' ? 'grid grid-cols-2 gap-x-4 gap-y-1' : 'flex flex-col gap-1'}>
       {sectionFields.map((field) => (
-        <FieldGroup
+        <Field
           key={field.name}
-          className={`mt-4 ${field.fullWidth || layout === 'vertical' ? 'col-span-2' : ''}`}
+          className={`mt-2 ${field.fullWidth || layout === 'vertical' ? 'col-span-2' : ''}`}
         >
-          <FieldLabel>
+          <FieldLabel className="text-xs text-muted-foreground mb-0">
             {field.label}
             {field.required && <span className="text-destructive ml-1">*</span>}
           </FieldLabel>
           {renderField(field)}
           {field.help && (
-            <p className="text-xs text-muted-foreground mt-1">{field.help}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{field.help}</p>
           )}
-        </FieldGroup>
+        </Field>
       ))}
     </div>
   );
 
-  // No groups — render flat, no tabs
   if (grouped.length <= 1) {
     return (
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -172,6 +171,32 @@ export function DynamicForm({
               type="submit"
               disabled={isSubmitting}
               className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isSubmitting ? 'Saving...' : submitLabel}
+            </button>
+          </div>
+        )}
+      </form>
+    );
+  }
+
+  if (!useTabs) {
+    return (
+      <form onSubmit={handleSubmit} className="space-y-8 px-1">
+        {grouped.map((section) => (
+          <div key={section.label} className="space-y-2">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider border-b pb-1 opacity-70">
+              {section.label}
+            </h3>
+            {renderSection(section.fields)}
+          </div>
+        ))}
+        {onSubmit && (
+          <div className="pt-4 pb-6">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg"
             >
               {isSubmitting ? 'Saving...' : submitLabel}
             </button>
