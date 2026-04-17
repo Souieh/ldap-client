@@ -3,7 +3,7 @@
 import React, { FC, useMemo, useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
-import { Edit, Info, Shield, Users, Users2, Loader2, Settings } from 'lucide-react';
+import { Edit, Info, Shield, Users, Users2, Loader2, Settings, RotateCcw } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ObjectMembers } from './object-members';
 import { ObjectParents } from './object-parents';
