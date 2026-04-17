@@ -10,6 +10,7 @@ import { FilterForm } from '@/components/forms/filter-form';
 import { Header } from '@/components/layout/header';
 import { OUTreeSidebar } from '@/components/layout/ou-tree-sidebar';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getAccountStatus } from '@/lib/constants/ldap-attributes';
 import { UI_LABELS } from '@/lib/constants/ui-labels';
@@ -23,7 +24,7 @@ type ObjectType = 'user' | 'computer' | 'group';
 
 export default function ADManagementPage() {
   const [ous, setOus] = useState<ADOU[]>([]);
-  const [selectedOuDN, setSelectedOuDN] = useState<string>('');
+  const [selectedOuDN, setSelectedOuDN] = useState<string>('ROOT');
   const [objectType, setObjectType] = useState<ObjectType>('user');
 
   const [users, setUsers] = useState<ADUser[]>([]);
@@ -44,9 +45,11 @@ export default function ADManagementPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formType, setFormType] = useState<'user' | 'group' | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isOuSheetOpen, setIsOuSheetOpen] = useState(false);
 
   useEffect(() => {
     loadOUs();
+    handleSelectOU('ROOT', { dn: 'ROOT' } as any);
   }, []);
 
   const breadcrumbs = useMemo(() => {
@@ -84,6 +87,7 @@ export default function ADManagementPage() {
   const handleSelectOU = async (ouDN: string, ou: ADOU) => {
     setSelectedOuDN(ouDN);
     setSearchValue('');
+    setIsOuSheetOpen(false);
     setUsers([]);
     setComputers([]);
     setGroups([]);
@@ -281,8 +285,9 @@ export default function ADManagementPage() {
         <h1 className='text-3xl font-bold mb-8'>{UI_LABELS.ad.title}</h1>
 
         <div className='grid grid-cols-1 lg:grid-cols-4 gap-6'>
-          <div className='lg:col-span-1'>
-            <div className='border border-border rounded-lg p-4 bg-card'>
+          {/* Desktop Sidebar */}
+          <div className='hidden lg:block lg:col-span-1'>
+            <div className='border border-border rounded-lg p-4 bg-card sticky top-24'>
               <div className='mb-4 flex items-center justify-between gap-3'>
                 <h2 className='font-semibold'>{UI_LABELS.ad.folders}</h2>
                 <button
@@ -305,13 +310,50 @@ export default function ADManagementPage() {
           </div>
 
           <div className='lg:col-span-3'>
+            {/* Mobile OU Tree Trigger */}
+            <div className='lg:hidden mb-4'>
+              <Sheet open={isOuSheetOpen} onOpenChange={setIsOuSheetOpen}>
+                <SheetTrigger asChild>
+                  <Button variant='outline' className='w-full justify-start gap-2 h-11'>
+                    <Plus className='h-4 w-4' />
+                    {selectedOuDN ? (
+                      <span className='truncate font-medium'>
+                        OU: {selectedOuDN === 'ROOT' ? 'All Objects' : selectedOuDN.split(',')[0].replace(/^OU=/i, '')}
+                      </span>
+                    ) : (
+                      'Select an Organizational Unit...'
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side='left' className='w-[300px] p-0'>
+                  <SheetHeader className='p-4 border-b'>
+                    <SheetTitle>Organizational Units</SheetTitle>
+                  </SheetHeader>
+                  <div className='p-4'>
+                    <OUTreeSidebar
+                      ous={ous}
+                      selectedOuDN={selectedOuDN}
+                      onSelectOU={handleSelectOU}
+                      onCreateOU={openCreateOUForm}
+                      onDeleteOU={handleDeleteOU}
+                      isLoading={isLoading && !selectedOuDN}
+                    />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
             {!selectedOuDN ? (
               <div className='flex items-center justify-center h-96 rounded-lg border border-border bg-muted/50'>
-                <p className='text-muted-foreground'>{UI_LABELS.ad.noSelection}</p>
+                <div className='text-center space-y-2'>
+                  <Plus className='h-12 w-12 text-muted-foreground/30 mx-auto' />
+                  <p className='text-muted-foreground font-medium'>{UI_LABELS.ad.noSelection}</p>
+                  <p className='text-xs text-muted-foreground/60'>Please select a folder from the tree to view its contents.</p>
+                </div>
               </div>
             ) : (
               <div className='space-y-6'>
-                <nav className='flex items-center flex-wrap gap-y-1 text-sm text-muted-foreground bg-muted/30 p-2 rounded-lg border border-border/40'>
+                <nav className='flex items-center gap-1 overflow-x-auto no-scrollbar py-1 text-sm text-muted-foreground bg-muted/30 px-2 rounded-lg border border-border/40 whitespace-nowrap'>
                   <Button
                     variant='ghost'
                     size='sm'
@@ -421,7 +463,12 @@ export default function ADManagementPage() {
           propertiesItem?.objectClass?.includes('computer') ? 'computer' :
           propertiesItem?.objectClass?.includes('group') ? 'group' : 'unknown'
         }
-        onSuccess={refreshCurrentData}
+        onSuccess={async (newDN) => {
+          if (newDN && propertiesItem) {
+            setPropertiesItem({ ...propertiesItem, dn: newDN });
+          }
+          await refreshCurrentData();
+        }}
       />
 
       <CreateOUModal

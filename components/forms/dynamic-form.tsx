@@ -182,7 +182,7 @@ export function DynamicForm({
 
   if (!useTabs) {
     return (
-      <form onSubmit={handleSubmit} className="space-y-8 max-h-[600px] overflow-y-auto px-1 custom-scrollbar">
+      <form onSubmit={handleSubmit} className="space-y-8 px-1">
         {grouped.map((section) => (
           <div key={section.label} className="space-y-2">
             <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider border-b pb-1 opacity-70">
@@ -192,7 +192,7 @@ export function DynamicForm({
           </div>
         ))}
         {onSubmit && (
-          <div className="pt-4 sticky bottom-0 bg-background/80 backdrop-blur-sm border-t border-border py-4 z-10">
+          <div className="pt-4 pb-6">
             <button
               type="submit"
               disabled={isSubmitting}

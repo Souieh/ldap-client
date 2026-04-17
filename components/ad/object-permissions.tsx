@@ -111,7 +111,7 @@ export function ObjectPermissions({ objectDN }: ObjectPermissionsProps) {
         </Button>
       </div>
 
-      <div className='divide-y flex-1 overflow-y-auto'>
+      <div className='divide-y flex-1'>
         {filteredPermissions.length > 0 ? (
           filteredPermissions.map((ace, idx) => (
             <div

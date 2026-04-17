@@ -119,22 +119,19 @@ export function ObjectMembers({ objectDN, objectName, onSuccess, hideContainer =
         body: JSON.stringify({
           ouDN: 'ROOT',
           objectType: memberTypeFilter,
-          scope: 'sub'
+          scope: 'sub',
+          query: memberSearchQuery
         }),
       });
 
       if (!res.ok) throw new Error('Search failed');
       const data = await res.json();
 
-      const query = memberSearchQuery.toLowerCase();
       const existingDNs = new Set(members.map(m => m.dn));
-
       const results = data
         .filter((obj: any) => {
           if (obj.dn === objectDN) return false; // Can't add group to itself
-          const name = (obj.displayName || obj.cn || '').toLowerCase();
-          const sam = (obj.sAMAccountName || '').toLowerCase();
-          return (name.includes(query) || sam.includes(query)) && !existingDNs.has(obj.dn);
+          return !existingDNs.has(obj.dn);
         })
         .map((obj: any) => ({
           dn: obj.dn,
@@ -331,7 +328,7 @@ export function ObjectMembers({ objectDN, objectName, onSuccess, hideContainer =
 
             {!isSearching && memberSearchQuery && searchResults.length === 0 && (
               <p className='text-[11px] text-center text-muted-foreground italic'>
-                Search results will appear here...
+                No {memberTypeFilter}s found matching "{memberSearchQuery}"
               </p>
             )}
           </div>

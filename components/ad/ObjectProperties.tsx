@@ -88,6 +88,7 @@ export function ObjectProperties({
   const [item, setItem] = useState<any>(null);
   const [currentDN, setCurrentDN] = useState(objectDN);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isMoveOpen, setIsMoveOpen] = useState(false);
   const [allOUs, setAllOUs] = useState<any[]>([]);
@@ -95,12 +96,17 @@ export function ObjectProperties({
   const loadDetails = async (dnToLoad = currentDN) => {
     try {
       setIsLoading(true);
+      setError(null);
       const [detailsRes, ousRes] = await Promise.all([
         fetch(`/api/ldap/objects/details?dn=${encodeURIComponent(dnToLoad)}`),
         fetch('/api/ldap/ous')
       ]);
 
-      if (!detailsRes.ok) throw new Error('Failed to load object details');
+      if (!detailsRes.ok) {
+        const errData = await detailsRes.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to load object details');
+      }
+
       const data = await detailsRes.json();
       setItem(data);
 
@@ -108,17 +114,25 @@ export function ObjectProperties({
         const ous = await ousRes.json();
         setAllOUs(ous);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error('Error loading details');
+      setError(error.message);
+      toast.error(`Error: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadDetails(objectDN);
-    setCurrentDN(objectDN);
+    let isMounted = true;
+    const fetchOnMount = async () => {
+      if (isMounted) {
+        setCurrentDN(objectDN);
+        await loadDetails(objectDN);
+      }
+    };
+    fetchOnMount();
+    return () => { isMounted = false; };
   }, [objectDN]);
 
   const availableTabs = useMemo(
@@ -131,6 +145,24 @@ export function ObjectProperties({
       <div className='flex flex-col items-center justify-center min-h-[400px] bg-card border rounded-xl shadow-sm'>
         <Loader2 className='h-8 w-8 animate-spin text-primary mb-4' />
         <p className='text-muted-foreground text-sm'>Loading details...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className='flex flex-col items-center justify-center min-h-[400px] bg-card border rounded-xl shadow-sm p-8 text-center'>
+        <div className='w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-4'>
+          <Shield className='h-6 w-6 text-destructive' />
+        </div>
+        <h3 className='text-lg font-semibold mb-2'>Connection Error</h3>
+        <p className='text-muted-foreground text-sm max-w-md mb-6'>
+          {error}. This may be due to a temporary connection issue or the object being moved or deleted.
+        </p>
+        <Button onClick={() => loadDetails()} className='gap-2'>
+          <Edit className='h-4 w-4 rotate-180' />
+          Retry Connection
+        </Button>
       </div>
     );
   }
@@ -157,12 +189,12 @@ export function ObjectProperties({
         </div>
       </div>
 
-      <div className='flex-1 min-w-0 bg-card border rounded-xl shadow-sm flex flex-col overflow-hidden h-[600px]'>
-        <Tabs defaultValue={availableTabs[0].key} className="flex flex-col h-full">
-          <div className='px-4 pt-4 bg-muted/20 inline-flex overflow-x-auto no-scrollbar'>
-            <TabsList className='flex-start whitespace-nowrap'>
+      <div className='min-w-0 bg-card border rounded-xl shadow-sm flex flex-col'>
+        <Tabs defaultValue={availableTabs[0].key} className="flex flex-col">
+          <div className='px-4 pt-4 bg-muted/20 inline-flex sticky top-0 z-20 border-b'>
+            <TabsList className='flex-start whitespace-nowrap mb-[-1px]'>
               {availableTabs.map((t) => (
-                <TabsTrigger key={t.key} value={t.key} className='gap-2'>
+                <TabsTrigger key={t.key} value={t.key} className='gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent shadow-none'>
                   {t.icon}
                   {t.title}
                 </TabsTrigger>
@@ -170,9 +202,9 @@ export function ObjectProperties({
             </TabsList>
           </div>
 
-          <div className='flex-1 bg-muted/20 overflow-y-auto'>
+          <div className='bg-muted/20'>
             {availableTabs.map((tab) => (
-              <TabsContent key={tab.key} value={tab.key} className='m-0 focus-visible:ring-0 p-2 h-full'>
+              <TabsContent key={tab.key} value={tab.key} className='m-0 focus-visible:ring-0 p-4'>
                 <tab.content
                   objectDN={currentDN}
                   objectName={objectName}
