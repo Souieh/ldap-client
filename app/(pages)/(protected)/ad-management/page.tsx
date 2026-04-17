@@ -24,7 +24,7 @@ type ObjectType = 'user' | 'computer' | 'group';
 
 export default function ADManagementPage() {
   const [ous, setOus] = useState<ADOU[]>([]);
-  const [selectedOuDN, setSelectedOuDN] = useState<string>('');
+  const [selectedOuDN, setSelectedOuDN] = useState<string>('ROOT');
   const [objectType, setObjectType] = useState<ObjectType>('user');
 
   const [users, setUsers] = useState<ADUser[]>([]);
@@ -49,6 +49,7 @@ export default function ADManagementPage() {
 
   useEffect(() => {
     loadOUs();
+    handleSelectOU('ROOT', { dn: 'ROOT' } as any);
   }, []);
 
   const breadcrumbs = useMemo(() => {

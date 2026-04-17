@@ -79,7 +79,7 @@ const buildZoneTree = (zoneNames: string[], records: DNSRecord[]): ZoneTreeNode[
 export default function DNSManagerPage() {
   const router = useRouter();
   const [records, setRecords] = useState<DNSRecord[]>([]);
-  const [selectedFilter, setSelectedFilter] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('forward');
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
   const [searchValue, setSearchValue] = useState('');
   const [isLoading, setIsLoading] = useState(true);
