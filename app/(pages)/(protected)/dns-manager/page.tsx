@@ -9,6 +9,7 @@ import { Modal } from '@/components/ui/modal';
 import { DynamicForm, FormField } from '@/components/forms/dynamic-form';
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/pagination';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { toast } from 'sonner';
 import { UI_LABELS } from '@/lib/constants/ui-labels';
 import {
@@ -87,6 +88,7 @@ export default function DNSManagerPage() {
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [isZoneSheetOpen, setIsZoneSheetOpen] = useState(false);
 
   const zones = useMemo(() => {
     const unique = Array.from(new Set(records.map((record) => record.zone))).sort();
@@ -256,6 +258,7 @@ export default function DNSManagerPage() {
     setSelectedFilter(filter);
     setSearchValue('');
     setCurrentPage(1);
+    setIsZoneSheetOpen(false);
   };
 
   const toggleExpanded = (path: string) => {
@@ -421,31 +424,66 @@ export default function DNSManagerPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-            <div className="rounded-lg border border-border bg-card p-4">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold">Zones</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {zones.length} zone{zones.length === 1 ? '' : 's'}
-                  </p>
+            {/* Desktop Zone Sidebar */}
+            <div className="hidden lg:block lg:col-span-1">
+              <div className="rounded-lg border border-border bg-card p-4 sticky top-24">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-semibold">Zones</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {zones.length} zone{zones.length === 1 ? '' : 's'}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
+                    {visibleRecords.length}
+                  </span>
                 </div>
-                <span className="rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
-                  {visibleRecords.length}
-                </span>
-              </div>
 
-              {zones.length === 0 ? (
-                <div className="rounded-md border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
-                  No DNS zones found.
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  {renderZoneNodes(zoneTree)}
-                </div>
-              )}
+                {zones.length === 0 ? (
+                  <div className="rounded-md border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+                    No DNS zones found.
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {renderZoneNodes(zoneTree)}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-6 lg:col-span-3">
+              {/* Mobile Zone Trigger */}
+              <div className='lg:hidden'>
+                <Sheet open={isZoneSheetOpen} onOpenChange={setIsZoneSheetOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant='outline' className='w-full justify-start gap-2 h-11'>
+                      <Plus className='h-4 w-4' />
+                      {selectedFilter ? (
+                        <span className='truncate font-medium'>
+                          Zone: {selectedFilter === 'forward' ? 'Forward' : selectedFilter === 'reverse' ? 'Reverse' : selectedFilter}
+                        </span>
+                      ) : (
+                        'Select a DNS Zone...'
+                      )}
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side='left' className='w-[300px] p-0'>
+                    <SheetHeader className='p-4 border-b'>
+                      <SheetTitle>DNS Zones</SheetTitle>
+                    </SheetHeader>
+                    <div className='p-4'>
+                      {zones.length === 0 ? (
+                        <div className="text-center text-sm text-muted-foreground">No DNS zones found.</div>
+                      ) : (
+                        <div className="space-y-1">
+                          {renderZoneNodes(zoneTree)}
+                        </div>
+                      )}
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
+
               {selectedFilter && (
                 <div className="flex items-center text-sm text-muted-foreground">
                   <span>Zones</span>
