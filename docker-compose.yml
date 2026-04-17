@@ -8,6 +8,8 @@ services:
       - SESSION_SECRET=${SESSION_SECRET}
       - HOSTNAME=${HOSTNAME}
       - PORT=${PORT}
+    volumes:
+      - ../files/config:/app/config
     dns:
       - ${SAMBA_DC_IP}
       - 1.1.1.1
