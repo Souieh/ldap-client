@@ -6,13 +6,20 @@ export async function searchUsers(
   userDN: string,
   password: string,
   ouDN: string,
-  scope: 'base' | 'one' | 'sub' = 'one'
+  scope: 'base' | 'one' | 'sub' = 'one',
+  query?: string
 ): Promise<ADUser[]> {
   const client = getClient(config);
   try {
     await client.bind(userDN, password);
+    let filter = '(&(objectClass=person)(objectClass=user))';
+    if (query) {
+      const q = query.replace(/[()]/g, '');
+      filter = `(&${filter}(|(cn=*${q}*)(sAMAccountName=*${q}*)(displayName=*${q}*)(mail=*${q}*)))`;
+    }
+
     const { searchEntries } = await client.search(ouDN, {
-      filter: '(&(objectClass=person)(objectClass=user))',
+      filter,
       scope,
       attributes: [
         'dn',
@@ -209,18 +216,26 @@ export async function searchComputers(
   userDN: string,
   password: string,
   ouDN: string,
-  scope: 'base' | 'one' | 'sub' = 'one'
+  scope: 'base' | 'one' | 'sub' = 'one',
+  query?: string
 ): Promise<ADComputer[]> {
   const client = getClient(config);
   try {
     await client.bind(userDN, password);
+    let filter = '(objectClass=computer)';
+    if (query) {
+      const q = query.replace(/[()]/g, '');
+      filter = `(&${filter}(|(cn=*${q}*)(sAMAccountName=*${q}*)(dNSHostName=*${q}*)))`;
+    }
+
     const { searchEntries } = await client.search(ouDN, {
-      filter: '(objectClass=computer)',
+      filter,
       scope,
       attributes: [
         'dn',
         'objectClass',
         'cn',
+        'displayName',
         'sAMAccountName',
         'dNSHostName',
         'operatingSystem',
@@ -242,18 +257,26 @@ export async function searchGroups(
   userDN: string,
   password: string,
   ouDN: string,
-  scope: 'base' | 'one' | 'sub' = 'one'
+  scope: 'base' | 'one' | 'sub' = 'one',
+  query?: string
 ): Promise<ADGroup[]> {
   const client = getClient(config);
   try {
     await client.bind(userDN, password);
+    let filter = '(objectClass=group)';
+    if (query) {
+      const q = query.replace(/[()]/g, '');
+      filter = `(&${filter}(|(cn=*${q}*)(sAMAccountName=*${q}*)(displayName=*${q}*)(mail=*${q}*)))`;
+    }
+
     const { searchEntries } = await client.search(ouDN, {
-      filter: '(objectClass=group)',
+      filter,
       scope,
       attributes: [
         'dn',
         'objectClass',
         'cn',
+        'displayName',
         'sAMAccountName',
         'mail',
         'description',

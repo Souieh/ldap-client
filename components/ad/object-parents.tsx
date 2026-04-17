@@ -116,23 +116,18 @@ export function ObjectParents({ objectDN, objectName, onSuccess, hideContainer =
         body: JSON.stringify({
           ouDN: 'ROOT',
           objectType: 'group',
-          scope: 'sub'
+          scope: 'sub',
+          query: groupSearchQuery
         }),
       });
 
       if (!res.ok) throw new Error('Search failed');
       const data = await res.json();
 
-      // Filter results based on query and exclude groups already joined
-      const query = groupSearchQuery.toLowerCase();
+      // Exclude groups already joined
       const existingDNs = new Set(parents.map(p => p.dn));
-
       const results = data
-        .filter((g: any) => {
-          const name = (g.displayName || g.cn || '').toLowerCase();
-          const sam = (g.sAMAccountName || '').toLowerCase();
-          return (name.includes(query) || sam.includes(query)) && !existingDNs.has(g.dn);
-        })
+        .filter((g: any) => !existingDNs.has(g.dn))
         .map((g: any) => ({
           dn: g.dn,
           cn: g.cn,
@@ -300,7 +295,7 @@ export function ObjectParents({ objectDN, objectName, onSuccess, hideContainer =
 
             {!isSearching && groupSearchQuery && searchResults.length === 0 && (
               <p className='text-[11px] text-center text-muted-foreground italic'>
-                Search results will appear here...
+                No groups found matching "{groupSearchQuery}"
               </p>
             )}
           </div>

@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { ouDN, objectType, scope } = body;
+    const { ouDN, objectType, scope, query } = body;
 
     if (!ouDN || !objectType) {
       return NextResponse.json({ error: 'ouDN and objectType are required' }, { status: 400 });
@@ -36,7 +36,8 @@ export async function POST(request: NextRequest) {
           session.userDN,
           session.password,
           searchDN,
-          searchScope
+          searchScope as any,
+          query
         );
         break;
       case 'computer':
@@ -45,7 +46,8 @@ export async function POST(request: NextRequest) {
           session.userDN,
           session.password,
           searchDN,
-          searchScope
+          searchScope as any,
+          query
         );
         break;
       case 'group':
@@ -54,7 +56,8 @@ export async function POST(request: NextRequest) {
           session.userDN,
           session.password,
           searchDN,
-          searchScope
+          searchScope as any,
+          query
         );
         break;
       default:
