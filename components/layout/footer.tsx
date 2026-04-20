@@ -6,7 +6,7 @@ export function Footer() {
     <footer className='w-full border-t border-border bg-background py-6'>
       <div className='container mx-auto px-4 flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row'>
         <p className='text-sm text-muted-foreground'>
-          &copy; {new Date().getFullYear()} LDAP Directory Manager. Built for Samba4.
+          &copy; {new Date().getFullYear()} LDAPilot. Built for Samba4.
         </p>
         <div className='flex items-center gap-4'>
           <Link

@@ -99,7 +99,7 @@ export default function LoginPage() {
               <Network className="h-10 w-10 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">LDAP Directory Manager</CardTitle>
+          <CardTitle className="text-2xl font-bold">LDAPilot</CardTitle>
           <CardDescription>Select a profile and authenticate to continue</CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>

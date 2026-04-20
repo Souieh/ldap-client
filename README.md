@@ -1,6 +1,6 @@
-# ldap
+# LDAPilot
 
-LDAP Directory Manager - A modern, clean, and easy-to-use LDAP client for managing Samba4 Directory Services. Built with Next.js, shadcn/ui, and Lucide icons.
+LDAPilot - A modern, clean, and easy-to-use LDAPilot for managing Samba4 Directory Services. Built with Next.js, shadcn/ui, and Lucide icons.
 
 ## Features
 

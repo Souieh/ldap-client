@@ -53,7 +53,7 @@ export default function Home() {
             </div>
             <h1 className='text-5xl font-bold mb-6 text-balance'>{UI_LABELS.app.title}</h1>
             <p className='text-xl text-muted-foreground mb-8 text-balance'>
-              A modern, powerful LDAP client for managing Samba4 Directory Services
+              A modern, powerful LDAPilot for managing Samba4 Directory Services
             </p>
             <div className='flex gap-4 justify-center flex-wrap'>
               <Link href='/ad-management'>

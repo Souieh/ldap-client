@@ -1,6 +1,6 @@
 export const UI_LABELS = {
   app: {
-    title: 'LDAP Directory Manager',
+    title: 'LDAPilot',
     description: 'Modern Samba4 Directory Services Management',
   },
   navigation: {
